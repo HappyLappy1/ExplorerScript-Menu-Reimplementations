@@ -3,12 +3,15 @@ Contains the necessary Special Processes and Script files for various ExplorerSc
 
 # Current Menus Reimplemented
 ## The Recycle Shop
-Features:
+### Features
 - Unlimited custom recycle trades
 - Unlimited offer trades 
 - Bulk Prize Ticket Trading* (As of now, you can only trade storage items for prize tickets. I could fix this if it's a dealbreaker)
 - Individual scripts for Prize Ticket scenarios!
 - Infrastructure for custom prize ticket types
+
+### Installation
+
 (Link to a more complete guide will be here when I have time to write one)
 Basically just add the script files, import the special processes, reassign them if needed, and configure ``coro EVENT_S30_06`` like so:
 ![image](https://github.com/user-attachments/assets/aad1246a-a643-46ef-a1cd-d2d3aba4c900)
