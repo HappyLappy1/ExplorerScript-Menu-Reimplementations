@@ -1,3 +1,4 @@
+// This script file will play if the player wins the lottery. Customize it as you wish. The rewards are at the bottom.
 def 0 {
     message_Close();
     with (actor ACTOR_NPC_SOONANSU) {
@@ -96,19 +97,19 @@ def 0 {
     });
     CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
     switch ($LOTTERY_RESULT) {
-        case 9:
+        case 9: // Prize Ticket
             item_SetTableData(0,5);
             break;
-        case 10:
+        case 10: // Silver Ticket
             item_SetTableData(0,8);
             break;
-        case 11:
+        case 11: // Gold Ticket
             item_SetTableData(0,11);
-            break;
-        case 12:
+            break; 
+        case 12: // Prism Ticket
             item_SetTableData(0,14);
             break;
-        case > 12:
+        case > 12: // Something else
         default:
             break;
     }
