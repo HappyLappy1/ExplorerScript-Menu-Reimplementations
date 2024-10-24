@@ -1,0 +1,1191 @@
+/* Necessary Special Processes (Reassign these if they conflict)
+64: count_nb_items_in_bag_var (counts the items of a specific type in the bag, and adds it to a variable)
+65: indexed_variable_full_copy (copies an entire indexed variable onto another one. To overwrite backup variables)
+66: Get Guild Rank (I forget the actual name)
+67: count_nb_items_in_storage_var (counts the items of a specific type in storage, and adds it to a variable)
+68: Select_ID (you may already have this SP, it's pretty common. Lets the next SP use 3 values instead of 2)
+69: equalize_indexed_vars (sets parts of an indexed variable equal to each-other)
+70: SwapBag
+71: RecycleShopValidateBag
+72: EmptyBag
+73: RecycleShopCountItemsByIDX
+74: Read_Current_Offer_From_Ram
+75: Add Rand To Script Variable
+76: Read Current Offer from RAM
+77: Write Offer To RAM
+
+
+Notes: 
+    - Most of this script runs on an opcode you may be unfamiliar with. "call" is like "jump" but temporary. 
+    - Offer unlock criteria are currently hardcoded, but SpecialProcess 77 should be enough to do it by hand if you want to change them!
+    - Adding new trades or offers couldn't be easier! Just follow the TODO labels! Or read the guide (TODO: write guide)
+*/
+
+
+def 0 {
+    supervision_Acting(0);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(2);
+    }
+    debug_Print('LABAL_TOP');
+    if (debug) {
+        message_Mail("Use which recycle shop?");
+        switch(message_SwitchMenu(0,1)) {
+            case menu("Original"):
+                message_Menu(MENU_RECYCLE_SHOP);
+                message_Menu(MENU_RECYCLE_SHOP2);
+                $LOTTERY_RESULT = 0;
+                end;
+            case menu("Custom"):
+                break;
+        }
+    }
+    $DUNGEON_EVENT_LOCAL = 0;
+    $EVENT_LOCAL = 0;
+    if ($LOTTERY_RESULT > 0) { // Just completed lottery 
+        $EVENT_LOCAL = 1;
+        message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+        message_Talk({
+            english=" Draw another [CS:I]Prize Ticket[CR]?",
+        });
+        switch ( message_SwitchMenu(0, 1) ) {
+            case menu({
+                english="Yes",
+            }):
+                jump @lotto_again;
+            case menu({
+                english="No",
+            }):
+            default:
+                break;
+        }
+        if ($LOTTERY_RESULT == 0) { // Impossible, but will be used for "no longer browsing lottery"
+            §return_to_main_menu;
+        }
+        $EVENT_LOCAL = 1;
+    } else {
+        screen2_FadeOut(1,30);
+    }
+    ~RecycleMainMenu(); // See the bottom of the script for this macro!
+    if ($LOTTERY_RESULT > 0) { // Browsing Prize Tickets
+        message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+        message_Talk({
+            english=" It\'s so exciting! You never know\nwhat you might find! \nEnter the Big Treasure [CS:I]Prize Ticket[CR] drawing?",
+        });
+        switch ( message_SwitchMenu(2, 1) ) {
+            case menu({
+                english="Yes",
+            }):
+                §lotto_again;
+                message_Close();
+                call @init_lotto_redeem;
+            case menu({
+                english="No",
+            }):
+            default:
+                message_Close();
+                jump @return_to_main_menu;
+        }
+    }
+    $LOTTERY_RESULT = 0;
+    debug_Print("RecycleMenu2A");
+    §check_if_offer;
+    $DUNGEON_EVENT_LOCAL = 0;
+    §resume_check_offer;
+    /*
+    TODO: Add your offers here!
+    */
+    switch(ProcessSpecial(76,0,0)) { // Retrieve Current Offer from RAM
+        case 8: // Won't happen unless called manually
+            // Deluxe Box (387) containing Prize Ticket (169) with a chance to get a Prize Ticket (0) of (100)
+            // In exchange for (1) Gold Gummi (129), (1) Big Apple (110), 0 of Nothing (0), and (0) RAWST BERRIES.  
+            ~AssignTrade(387,169,0,100,1,129,1,110,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 9: // Won't happen unless called manually
+            // Deluxe Box (387) containing Gabite Scale (92) with a chance to get a Prism Ticket (3) of (100)
+            // In exchange for (1) Gold Gummi (129), (1) Big Apple (110), 0 of Nothing (0), and (0) RAWST BERRIES.  
+            ~AssignTrade(387,92,3,100,1,129,1,110,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 10: // can occur if $RECYCLE_COUNT > 21
+            // Protein (100) with no contents (0) with a chance to get a Silver Ticket (1) of (8) 
+            // In exchange for (3) Oran Berries (70), (1) X-Eye Seed (76), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(100,0,1,8,3,70,1,76,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 11: // Can occur if $RECYCLE_COUNT > 23
+            // Calcium (101) with no contents (0) with a chance to get a Silver Ticket (1) of (8)
+            // In exchange for (3) Oran Berries (70), (1) Sleep Seed (84), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(101,0,1,8,3,70,1,84,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 12: // Can occur if $RECYCLE_COUNT > 25
+            // Iron (102) with no contents (0) with a chance to get a Silver Ticket (1) of (8)
+            // In exchange for (3) Oran Berries (70), (1) Blinker Seed (74), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(102,0,1,8,3,70,1,74,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 13: // Can occur  if $RECYCLE_COUNT > 27
+            // Zinc (108) with no contents (0) with a chance to get a Silver Ticket (1) of (8)
+            // In exchange for (3) Oran Berries (70), (1) Totter Seed (83), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(108,0,1,8,3,70,1,83,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 14: // Can occur if $RECYCLE_COUNT > 29 
+            // This trade uses 4 items plus the desired item. More than I can store at once... Shenanigans are afoot! 
+            // Link Box (362) with no contents (0) with a chance to get a Silver Ticket (1) of (8)
+            // In exchange for (3) Oran Berries (70), (3) Cheri Berries (82), (3) Pecha Berries (81), and 3 Rawst Berries (78). 
+            // I think this is the right recipe, but frankly I'm having a hard time verifying it... 
+            ~AssignTrade(362,0,1,8,3,70,3,82,3,81,3); // the last number means 3 Rawst Berries. Technical limitations and such.
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 15: // Can occur if $RECYCLE_COUNT > 49
+            // Life Seed (77) with no contents (0) with a chance to get a Silver Ticket (1) of (6)
+            // In exchange for (3) Oran Berries (70), (1) Plain Seed (85), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(77,0,1,6,3,70,1,85,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 16: // Can occur if $RECYCLE_COUNT > 79
+            // Curve Band (46) with no contents (0) with a chance to get a Silver Ticket (1) of (6)
+            // In exchange for (2) Oran Berries (70), (1) Apple (109), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(46,0,1,6,2,70,1,109,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+        case 17: // Can occur if $RECYCLE_COUNT > 89
+            // No-Aim Scope (48) with no contents (0) with a chance to get a Silver Ticket (1) of (6)
+            // in exchange for (2) Oran Berries (70), (1) Apple (109), 0 of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(48,0,1,6,2,70,1,109,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 18: // Can occur if $RECYCLE_COUNT > 95
+            // Patsy Band (20) with no contents (0) with a chance to get a Silver Ticket (1) of (6)
+            // In exchange for (3) Oran Berries (70), (1) Apple (109), 0 of Nothing (0), and (0) RAWST BERRIES.
+            ~AssignTrade(20,0,1,6,3,70,1,109,0,0,0);
+            call @ask_offer; 
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        case 19: // Can occur if $RECYCLE_COUNT > 99
+            // Joy Seed (89) with no contents (0) with a chance to get a Silver Ticket (1) of (6)
+            // In exchange for (3) Oran Berries (70), (2) Plain Seeds (85), 0 of Nothing (0), and (0) RAWST BERRIES.
+            ~AssignTrade(89,0,1,6,3,70,2,85,0,0,0);
+            call @ask_offer;
+            call @display_transaction;
+            call @confirm_offer;
+            call @validate_transaction;
+            ProcessSpecial(77,-1,0); // Offer Consumed!
+            jump @roll_bonus;
+        default:
+            message_Talk(" I must be mistaken,\nwe don\'t seem to have an offer right now...");
+        case 255: 
+            clear $GROUND_ENTER_LINK_BACKUP;
+            jump @recycle_now;
+            break;
+    }
+    
+    debug_Print("Uh-Oh 0");
+    hold;
+    §ask_offer;
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);  
+    while ($DUNGEON_EVENT_LOCAL != 255) {
+        if ($DUNGEON_EVENT_LOCAL == 0) { // Only false if you back out of a menu!
+            message_Talk(" We've got a new Offer here!\nIt will be here for a limited time only!");
+        } else {
+            message_Talk(" What'd you like to trade with?");
+        }
+        switch(message_SwitchMenu(4,1)) {
+            case menu("Offer"):
+                $DUNGEON_EVENT_LOCAL = 1; // This signals that there is an offer, and to use the other dialogue if we come back here!
+                message_Talk(" Select the item you want, and I\'ll tell\nyou which items you'll have to trade to get it!");
+                switch(message_SwitchMenu(2,1)) {
+                    case menu("[s_item:0]"):
+                        return;
+                    case menu("Cancel"):
+                        break;
+                }
+                break;
+            case menu("Recycle"):
+                jump @recycle_now;
+            default:
+            case menu("Cancel"):
+                message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD); 
+                message_Talk(" This Offer ends today!\nDon't miss it!");
+                message_Close();
+                $EVENT_LOCAL = 1;
+                jump @return_to_main_menu;
+        }
+    }
+    debug_Print("Uh-Oh 1");
+    hold;
+    §recycle_now;
+    debug_Print("Hi");
+    clear $SCENARIO_MAIN_BIT_FLAG_BACKUP;
+    clear $GROUND_ENTER_LINK_BACKUP;
+    call @clear_items;
+    call @validate_choices;
+    /*
+    TODO: Add your normal recycle trades here. Also take a pit-stop at §validate_choices
+    */
+    message_Talk(" Select the item you want, and I\'ll tell\nyou which items you'll have to trade to get it!");
+    switch(message_SwitchMenu2(16,1,$SCENARIO_MAIN_BIT_FLAG_BACKUP)) {
+        case menu("[CS:I]Def. Scarf[CR]"): // 1 Apple, 1 Max Elixir, 1 Escape Orb
+            // Def. Scarf (37) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (1) Apple (109), (1) Max Elixir (99), 1 Escape Orb (330), and (0) RAWST BERRIES. 
+            ~AssignTrade(37,0,0,6,1,109,1,99,1,330,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Power Band[CR]"): // 1 Apple, 1 Max Elixir, 1 Escape Orb
+            // Power Band (26) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (1) Apple (109), (1) Max Elixir (99), 1 Escape Orb (330), and (0) RAWST BERRIES. 
+            ~AssignTrade(26,0,0,6,1,109,1,99,1,330,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Special Band[CR]"): // 1 Apple, 1 Max Elixir, 1 Escape Orb
+            // Special Band (40) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (1) Apple (109), (1) Max Elixir (99), 1 Escape Orb (330), and (0) RAWST BERRIES. 
+            ~AssignTrade(40,0,0,6,1,109,1,99,1,330,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Zinc Scarf[CR]"): // 1 Apple, 1 Max Elixir, 1 Escape Orb
+            // Zinc Band (41) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (1) Apple (109), (1) Max Elixir (99), 1 Escape Orb (330), and (0) RAWST BERRIES. 
+            ~AssignTrade(41,0,0,6,1,109,1,99,1,330,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Oran Berry[CR]"): // 2 Apples
+            // Oran Berry (70) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (2) Apple (109), (0) of Nothing (0), (0) of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(70,0,0,6,2,109,0,0,0,0,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Eyedrop Seed[CR]"): // 3 Max Elixir
+            // Eyedrop Seed (72) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (3) Max Elixir (99), (0) of Nothing (0), (0) of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(72,0,0,6,3,99,0,0,0,0,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Heal Seed[CR]"): // 2 Big Apples
+            // Heal Seed (69) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (2) Big Apple (110), (0) of Nothing (0), (0) of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(69,0,0,6,2,110,0,0,0,0,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Reviver Seed[CR]"): // 2 Escape Orbs
+            // Reviver Seed (73) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (2) Escape Orb (330), (0) of Nothing (0), (0) of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(73,0,0,6,2,330,0,0,0,0,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I][M:I1]Cleanse Orb[CR]"): // 3 Grimy Food
+            // Cleanse Orb (323) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (3) Grimy Food (111), (0) of Nothing (0), (0) of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(323,0,0,6,3,111,0,0,0,0,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I][M:I1]Escape Orb[CR]"): // 1 Apple, 1 Large Apple
+            // Escape Orb (330) with no contents (0) with a chance to get a Prize Ticket (0) of (6)
+            // In exchange for (1) Apple (109), (1) Big Apple (110), (0) of Nothing (0), and (0) RAWST BERRIES. 
+            ~AssignTrade(330,0,0,6,1,109,1,110,0,0,0);
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("[CS:I]Prize Ticket[CR]"):
+            ~AssignTicketTrade(169,0,10,4);
+            call @ticket_select_items;
+            break;
+        case menu("[CS:I]Silver Ticket[CR]"):
+            ~AssignTicketTrade(170,1,13,6);
+            call @ticket_select_items;
+            break;
+        case menu("[CS:I]Gold Ticket[CR]"):
+            ~AssignTicketTrade(171,2,17,8);
+            call @ticket_select_items;
+            break;
+        case menu("[CS:I]Prism Ticket[CR]"):
+            ~AssignTicketTrade(172,3,20,10);
+            call @ticket_select_items;
+            break;
+        case menu("[CS:Z]Wavy Charm[CR]"): // GoHL Reference. CUSTOM!
+            // Wavy Charm (764) with no contents (0) with a manual chance to get a RANDOM ticket (5) of (100)
+            // In exchange for (1) Pounce Orb (321), (1) Blowback Orb (313), (1) Switcher Orb (312), and (0) RAWST BERRIES. 
+            ~AssignTrade(764,0,5,100,1,321,1,313,1,312,0); // The 5 doesn't matter much. I manually set $LOCAL0 to what I want after the macro gets run!
+            switch(random(100)) {
+                case <= 50:
+                    $LOCAL0 = 0; // Prize Ticket
+                    break;
+                case <= 75:
+                    $LOCAL0 = 1; // Silver Ticket
+                    break;
+                case <= 90:
+                    $LOCAL0 = 2; // Gold Ticket
+                    break;
+                default:
+                    $LOCAL0 = 3; // Prism Ticket
+                    break;
+            }
+            call @display_transaction;
+            call @confirm_norm;
+            call @validate_transaction;
+            jump @roll_bonus;
+            break;
+        case menu("Cancel"):
+        default:
+            jump @return_to_main_menu;
+            hold;
+    }
+    §back_to_main_menu;
+    jump @recycle_more;
+    hold;
+    §validate_choices;
+    debug_Print("RecycleValidateChoices");
+    // Excuse the wonkiness here: The order of the flags is the order the items will be presented,
+    // and that list happens to be sorted by the sort key...  
+    //TODO: Rearrange these to match the requirements (in the item order you want them to show up!
+    $SCENARIO_MAIN_BIT_FLAG_BACKUP[15] = 1; // Last option, Cancel, should always show up!
+    switch($RECYCLE_COUNT) {
+        case > 99: // 100+ Recycles: Wavy Charm
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[14] = 1;
+        case > 19: // 20+ Recycles: zinc band
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[3] = 1;
+        case > 17: // 18+ Recycles: special band
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[2] = 1;
+        case > 15: // 16+ Recycles: def scarf
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[0] = 1;
+        case > 13: // 14+ Recycles: power band
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[1] = 1;
+        case > 11: // 12+ Recycles: eyedrop seed
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[5] = 1;
+        case > 9: // 10+ Recycles: reviver seed
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[7] = 1;
+        case > 7: // 8+ Recycles: cleanse orb
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[8] = 1;
+        case > 3: // 6+ Recycles: heal seed
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[6] = 1;
+        case > 1: // 4+ Recycles: escape orb
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[9] = 1;
+        default: // 2+ Recycles:  Oran Berry + Tickets
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[4] = 1; // Oran
+            switch(ProcessSpecial(66,0,0)) { // Check Guild Rank
+                case > 6: // Hyper or above
+                    $SCENARIO_MAIN_BIT_FLAG_BACKUP[13] = 1; // Prism Ticket
+                case > 2: // Gold or above
+                    $SCENARIO_MAIN_BIT_FLAG_BACKUP[12] = 1; // Gold Ticket
+                case > 1: // Silver or above
+                    $SCENARIO_MAIN_BIT_FLAG_BACKUP[11] = 1; // Silver Ticket
+                default: // Bronze or less...
+                    $SCENARIO_MAIN_BIT_FLAG_BACKUP[10] = 1; // Prize Ticket
+                    break;
+            }
+            break;
+    }    
+    return;
+    
+    §clear_items;
+    debug_Print("ClearItems");
+    item_Set(0,0,0);
+    item_Set(1,0,0);
+    item_Set(2,0,0);
+    item_Set(3,0,0);
+    return;
+    §display_transaction;
+    debug_Print("RecycleDisplayTransaction");
+    if ($GROUND_ENTER_LINK_BACKUP[3]) { // 4 unique item trades are... vexing because of game limitations. Have fun!
+        debug_Print("Fine, then! *Hardcodes your dialogue*");
+        $DUNGEON_EVENT_LOCAL = 4;
+        message_Talk(" You want this [s_item:0]?\nIt costs: [s_item:1]([CS:G][var:34:0][CR]), [s_item:2]([CS:G][var:34:1][CR]),\n[CN][s_item:3]([CS:G][var:34:2][CR]) and [CS:I]Rawst Berry[CR]([CS:G][var:34:3][CR])!");
+        // Maybe do some kind of switch case deal using an unoccupied variable?
+    } elseif ($GROUND_ENTER_LINK_BACKUP[2]) {
+        $DUNGEON_EVENT_LOCAL = 3;
+        message_Talk(" You want this [s_item:0]?\nIt costs:[CN][s_item:1]([CS:G][var:34:0][CR]),\n[CN][s_item:2]([CS:G][var:34:1][CR]), and [s_item:3]([CS:G][var:34:2][CR])!");
+    } elseif ($GROUND_ENTER_LINK_BACKUP[1]) {
+        $DUNGEON_EVENT_LOCAL = 2;
+        message_Talk(" You want this [s_item:0]?\nIt costs:[CN][s_item:1]([CS:G][var:34:0][CR])\n[CN]and [s_item:2]([CS:G][var:34:1][CR])");
+    } else { // 1 unique item trade
+        $DUNGEON_EVENT_LOCAL = 1;
+        message_Talk(" You want this [s_item:0]?\nIt costs:[CN][s_item:1]([CS:G][var:34:0][CR])");
+    }
+    $EVENT_LOCAL = 0;
+    return;
+    
+    §confirm_norm;
+    switch ( message_SwitchMenu(2, 1) ) {
+        case menu({
+            english="Yes",
+        }):
+            return;
+        case menu({
+            english="No",
+        }):
+        default:
+            message_Talk(" Am I wrong?");
+            message_Close();
+            jump @recycle_now;
+    }
+    hold;
+    §validate_transaction;
+    debug_Print("Validating Transaction");
+    $EVENT_LOCAL = 0;
+    debug_Print("Validating Item 1");
+    ProcessSpecial(65, $DUNGEON_ENTER_MODE_BACKUP,$GROUND_ENTER_LINK_BACKUP);
+    ProcessSpecial(73,$EVENT_LOCAL,1);
+    if ($DUNGEON_ENTER_MODE_BACKUP > value($EVENT_LOCAL)) {
+        debug_Print("Failed 1!");
+        jump @insufficint_funding;
+    }
+    if ($DUNGEON_EVENT_LOCAL > 1) {
+        debug_Print("Validating Item 2");
+        $EVENT_LOCAL = 0;
+        ProcessSpecial(73,$EVENT_LOCAL,2);
+        ProcessSpecial(68,$DUNGEON_ENTER_MODE_BACKUP,0); // SelectId
+        ProcessSpecial(69, 0,1); // Equalize Variable Indices
+        if ($DUNGEON_ENTER_MODE_BACKUP > value($EVENT_LOCAL)) {
+            debug_Print("Failed 2!");
+            jump @insufficint_funding;
+        }
+    }
+    if ($DUNGEON_EVENT_LOCAL > 2) {
+        debug_Print("Validating Item 3");
+        $EVENT_LOCAL = 0;
+        ProcessSpecial(73,$EVENT_LOCAL,3);
+        ProcessSpecial(68,$DUNGEON_ENTER_MODE_BACKUP,0);
+        ProcessSpecial(69,0,2);
+        if ($DUNGEON_ENTER_MODE_BACKUP > value($EVENT_LOCAL)) {
+            debug_Print("Failed 3!");
+            jump @insufficint_funding;
+        }
+    }
+    if ($DUNGEON_EVENT_LOCAL > 3) {
+        debug_Print("Hardcoded to Rawst Berry!");
+        $EVENT_LOCAL = 0;
+        ProcessSpecial(64,$EVENT_LOCAL,78);
+        ProcessSpecial(67,$EVENT_LOCAL,78);
+        ProcessSpecial(68,$DUNGEON_ENTER_MODE_BACKUP,0);
+        ProcessSpecial(69,0,3);
+        if ($DUNGEON_ENTER_MODE_BACKUP > value($EVENT_LOCAL)) {
+            debug_Print("Failed 4!");
+            jump @insufficint_funding;
+        }
+    }
+    $EVENT_LOCAL = 0;
+    debug_Print("Removing Items");
+    while ($GROUND_ENTER_LINK_BACKUP > 0) {
+        ProcessSpecial(74,1,0);
+        $GROUND_ENTER_LINK_BACKUP -= 1;
+        debug_Print("Item 1 Instance Removed!");
+    }
+    if ($DUNGEON_EVENT_LOCAL > 1) {
+        ProcessSpecial(68,$GROUND_ENTER_LINK_BACKUP,0); // SelectId
+        ProcessSpecial(69, 0,1); // Equalize Variable Indices
+        debug_Print("Removing Item 2");
+        while ($GROUND_ENTER_LINK_BACKUP > 0) {
+            ProcessSpecial(74,2,0);
+            $GROUND_ENTER_LINK_BACKUP -= 1;
+            debug_Print("Item 2 Instance Removed!");
+        }
+    }
+    if ($DUNGEON_EVENT_LOCAL > 2) {
+        ProcessSpecial(68,$GROUND_ENTER_LINK_BACKUP,0); // SelectId
+        ProcessSpecial(69, 0,2); // Equalize Variable Indices
+        debug_Print("Removing Item 3");
+        while ($GROUND_ENTER_LINK_BACKUP > 0) {
+            ProcessSpecial(74,3,0);
+            $GROUND_ENTER_LINK_BACKUP -= 1;
+            debug_Print("Item 3 Instance Removed!");
+        }
+    }
+    if ($DUNGEON_EVENT_LOCAL > 3) {
+        ProcessSpecial(68,$GROUND_ENTER_LINK_BACKUP,0); // SelectId
+        ProcessSpecial(69, 0,2); // Equalize Variable Indices
+        item_Set(3,78,0); // Rawst Berry
+        debug_Print("Removing Rawsts");
+        while ($GROUND_ENTER_LINK_BACKUP > 0) {    
+            ProcessSpecial(74,3,0);
+            $GROUND_ENTER_LINK_BACKUP -= 1;
+            debug_Print("Rawst Removed!");
+        }
+    }
+    $EVENT_LOCAL = 1;
+    debug_Print("Success!");
+    §give_item;
+    message_Talk(" Thank you for recycling![K]\nHere's your [s_item:0].");
+    message_Close();
+    switch(ProcessSpecial(56,0,0)) {
+        case 0:
+            me_Play(4);
+            message_Mail({
+                english="[CN][hero] received the\n[CN][s_item:0]!",
+            });
+            WaitMe(4);
+            message_Close();
+            message_Menu(MENU_GIVE_ITEM); // Put in bag, it isn't full!
+            break;
+        default:
+            message_Talk("You don't have enough space in\nyour Treasure Bag for it, so I'll send it to\nyour storage.");
+            message_Close();
+            message_Mail("[CN]Sent the [s_item:0] to storage.");
+            message_Close();
+            message_Menu(MENU_GIVE_ITEM2); // Put in storage, bag is full!
+            break;
+    }
+    if ($RECYCLE_COUNT < 255) { // The game cannot store more than 255 recycles!
+        $RECYCLE_COUNT += 1;
+    }
+    return; // Need to reset the offer if it was just consumed!
+    §roll_bonus;
+    // Handle Bonus Prize ticket!
+    $DUNGEON_EVENT_LOCAL = 0;
+    ProcessSpecial(75,$DUNGEON_EVENT_LOCAL,100);
+    debug_PrintFlag($DUNGEON_EVENT_LOCAL,"Rand: ");
+    if ($DUNGEON_EVENT_LOCAL < value($LOCAL1)) {
+        switch($LOCAL0) {
+            case 3: // Prism Ticket
+                item_Set(0,172,0);
+                break;
+            case 2: // Gold Ticket
+                item_Set(0,171,0);
+                
+                break;
+            case 1: // Silver Ticket
+                item_Set(0,170,0);
+                
+                break;
+            case 0: // Prize Ticket
+                item_Set(0,169,0);                
+                break;
+            default: // None of these... designed for non-ticket bonus items, to be encoded as you wish!
+                break;
+        }
+        message_Talk(" Oh! Congratulations! That\nrecycle comes with this [s_item:0]!");
+        if ($LOCAL0 < 4) {
+            message_Talk(" You can redeem one bonus\n[CS:I]Prize Ticket[CR]! What would you like to do?");
+            switch(message_SwitchMenu(0,1)) {
+                case menu("Redeem"):
+                        jump @redeem_bonus_prize;
+                    break;
+                case menu("Not Interested"):
+                    message_Talk(" If you don't redeem your bonus\n[s_item:0] now, it becomes invalid. OK?");
+                        switch(message_SwitchMenu(0,1)) {
+                            case menu("Redeem"):
+                                jump @redeem_bonus_prize;
+                            case menu("Not Interested"):
+                                message_Talk(" Are you sure? OK, I'll just\nthrow it away.");
+                                break;
+                        }
+                        break;                               
+            }
+        } else {
+            message_Talk(" You can receive one bonus\n[s_item:0]! What would you like to do?");
+            switch(message_SwitchMenu(0,1)) {
+                case menu("Receive"):
+                    §take_bonus_item;
+                    switch(ProcessSpecial(56,0,0)) {
+                        case 0:
+                            me_Play(4);
+                            message_Mail({
+                                english="[CN][hero] received the\n[CN][s_item:0]!",
+                            });
+                            WaitMe(4);
+                            message_Close();
+                            message_Menu(MENU_GIVE_ITEM); // Put in bag, it isn't full!
+                            break;
+                        default:
+                            message_Talk("You don't have enough space in\nyour Treasure Bag for it, so I'll send it to\nyour storage.");
+                            message_Close();
+                            message_Mail("[CN]Sent the [s_item:0] to storage.");
+                            message_Close();
+                            message_Menu(MENU_GIVE_ITEM2); // Put in storage, bag is full!
+                            break;
+                    }
+                    break;
+                case menu("Not Interested"):
+                    message_Talk(" If you don't take your bonus\n[s_item:0] now, it becomes invalid. OK?");
+                        switch(message_SwitchMenu(0,1)) {
+                            case menu("Receive"):
+                                jump @take_bonus_item;
+                                break;
+                            case menu("Not Interested"):
+                                message_Talk(" Are you sure? OK, I'll just\nthrow it away.");
+                                break;
+                        }
+                        break;                               
+            }
+        }
+    }
+    jump @back_to_main_menu;
+    hold;
+    §insufficint_funding;
+    $EVENT_LOCAL = 0;
+    debug_Print("Failed!");
+    message_Talk(" You don't have enough items to\ntrade for this [s_item:0]!");
+    message_Close();
+    jump @recycle_more;
+    hold; 
+    §confirm_offer;
+    switch ( message_SwitchMenu(2, 1) ) {
+        case menu({
+            english="Yes",
+        }):
+            return;
+        case menu({
+            english="No",
+        }):
+        default:
+            jump @check_if_offer;
+    }
+    hold;
+    §ticket_select_items;
+    debug_Print("RecycleTicket");
+    ProcessSpecial(70,0,2); // Swap To some other bag
+    message_Talk(" For this [s_item:0],\nI\'ll need any [CS:C][var:34:0][CR] items you have!\nNo stackable items please!");
+    message_Talk(" If you like, I can exchange\n[CS:I]Prize Tickets[CR] in bulk, if you\nwithdraw the right number of items!");
+    $DUNGEON_EVENT_LOCAL = 1;
+    while($DUNGEON_EVENT_LOCAL > 0) {
+        $DUNGEON_EVENT_LOCAL = 0;
+        message_Talk(" Please withdraw the items from\nstorage you wish to trade!");
+        message_Close();
+        message_Menu(MENU_STORAGE);
+        switch(ProcessSpecial(71,$DUNGEON_EVENT_LOCAL,0)) {
+            case 255: // Has withdrawn one or more stackable items!
+                message_Talk(" As I said before, we\ndo not allow trades for stackable items!");
+                message_Talk(" Please return your stackable items to storage!");
+                message_Close();
+                break;                
+            case 0: // Has withdrawn no items
+                message_Talk(" You want to cancel?");
+                switch(message_SwitchMenu(0,1)) {
+                    case menu("Yes"):
+                        message_Close();
+                        break;
+                    case menu("No"):
+                        message_Close();
+                        $DUNGEON_EVENT_LOCAL = 1;
+                        break;
+                }
+                break;
+            default: // Has some items, none are stackable
+                $EVENT_LOCAL = value($DUNGEON_EVENT_LOCAL);
+                $EVENT_LOCAL /= value($GROUND_ENTER_LINK_BACKUP);
+                $EVENT_LOCAL *= value($GROUND_ENTER_LINK_BACKUP);
+                if ($DUNGEON_EVENT_LOCAL > value($EVENT_LOCAL)) {
+                    $ITEM_BACKUP = value($DUNGEON_EVENT_LOCAL);
+                    $DUNGEON_EVENT_LOCAL = 255;
+                    message_Talk(" I can\'t evenly exchange\n[CS:C][var:100:0][CR] items for [s_item:0][CS:I]s[CR]!");
+                    message_Talk(" Please deposit or withdraw\nitems to make a multiple of [CS:C][var:34:0][CR] items for\nbulk trading!");
+                } else {
+                    $ITEM_BACKUP = value($DUNGEON_EVENT_LOCAL);
+                    $EVENT_LOCAL /= value($GROUND_ENTER_LINK_BACKUP);
+                    message_Talk(" You want to exchange those\n[CS:C][var:100:0][CR] items for [s_item:0][CS:G]([var:92:0])[CR]?");
+                switch(message_SwitchMenu(0,1)) {
+                    case menu("Yes"):
+                        ProcessSpecial(72,0,0);
+                        message_Close();
+                        ProcessSpecial(70,2,0);
+                        if ($EVENT_LOCAL == 1) {
+                            message_Talk(" Would you like to redeem that\n[s_item:0] now?");
+                            switch(message_SwitchMenu(0,1)) {
+                                case menu("Yes"):
+                                    item_GetVariable(0,$ITEM_BACKUP);
+                                    switch($ITEM_BACKUP) {
+                                        case 169:
+                                            $LOCAL0 = 0;
+                                            break;
+                                        case 170:
+                                            $LOCAL0 = 1;
+                                            break;
+                                        case 171:
+                                            $LOCAL0 = 2;
+                                            break;
+                                        case 172:
+                                            $LOCAL0 = 3;
+                                            break;
+                                        default:
+                                            $LOCAL0 = 4; // None of the tickets?!?
+                                            break;
+                                    }   
+                                    if ($RECYCLE_COUNT < 255) {
+                                        $RECYCLE_COUNT += 1;
+                                    }
+                                    jump @redeem_bonus_prize;
+                                case menu("No"):
+                                    jump @give_item;
+                            }
+                        } else {
+                            message_Talk(" Here's your [s_item:0][CS:G]([var:92:0])[CR]!");
+                            me_Play(4);
+                            message_Mail({
+                                english="[CN][hero] received the\n[CN][s_item:0][CS:G]([var:92:0])[CR]!",
+                            });
+                            WaitMe(4);
+                            message_Close();
+                            $ITEM_BACKUP = value($EVENT_LOCAL);
+                            while ($EVENT_LOCAL > 0) {
+                                switch(ProcessSpecial(56,0,0)) {
+                                    case 0:
+                                        message_Menu(MENU_GIVE_ITEM); // Put in bag, it isn't full!
+                                        $EVENT_LOCAL -=1;
+                                        if ($RECYCLE_COUNT < 255) {
+                                            $RECYCLE_COUNT += 1;
+                                        }
+                                        break;
+                                    default:
+                                        message_Talk("You don't have enough space in\nyour Treasure Bag for the all, so I'll send\nthe rest to your storage.");
+                                        message_Close();
+                                        message_Mail("[CN]Sent the remaining [s_item:0]([var:92:0])[CR] to storage.");
+                                        message_Close();
+                                        while ($EVENT_LOCAL > 0) {
+                                            message_Menu(MENU_GIVE_ITEM2); // Put in storage, bag is full!
+                                            $EVENT_LOCAL -=1;
+                                            if ($RECYCLE_COUNT < 255) {
+                                                $RECYCLE_COUNT += 1;
+                                            }
+                                        }
+                                }
+                            }
+                            $LOCAL1 *= value($ITEM_BACKUP); // Multiply the bonus ticket odds by the number redeemed. 
+                            jump @roll_bonus;
+                        }
+                        return;
+                    case menu("No"):
+                        message_Talk(" Oh, okay![W:30] My math wasn\'t\nwrong there, was it?");
+                        message_Close();
+                        $DUNGEON_EVENT_LOCAL = 1;
+                        break;
+                }
+                }
+        }
+                
+    }
+    ProcessSpecial(70,2,0);
+    jump @check_if_offer;
+    hold;
+    §init_lotto_redeem;
+    debug_Print("RecycleCheckTickets");
+    clear $SCENARIO_MAIN_BIT_FLAG_BACKUP;
+    switch ( ProcessSpecial(PROCESS_SPECIAL_COUNT_ITEM_TYPE_IN_BAG, 169, 0) ) { // Prize Ticket
+        case >= 1:
+            $EVENT_LOCAL = 1;
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[0] = 1;
+            break;
+        default:
+            break;
+    }    
+    switch ( ProcessSpecial(PROCESS_SPECIAL_COUNT_ITEM_TYPE_IN_BAG, 170, 0) ) { // Silver Ticket
+        case >= 1:
+            $EVENT_LOCAL = 1;
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[1] = 1;
+            break;
+        default:
+            break;
+    }  
+    switch ( ProcessSpecial(PROCESS_SPECIAL_COUNT_ITEM_TYPE_IN_BAG, 171, 0) ) { // Gold Ticket
+        case >= 1:
+            $EVENT_LOCAL = 1;
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[2] = 1;
+            break;
+        default:
+            break;
+    }
+
+    switch ( ProcessSpecial(PROCESS_SPECIAL_COUNT_ITEM_TYPE_IN_BAG, 172, 0) ) { // Prism Ticket
+        case >= 1:
+            $EVENT_LOCAL = 1;
+            $SCENARIO_MAIN_BIT_FLAG_BACKUP[3] = 1;
+            break;
+        default:
+            break;
+    }
+    $SCENARIO_MAIN_BIT_FLAG_BACKUP[4] = 1; // Cancel option!
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    if ($EVENT_LOCAL == 0) {
+        message_Talk({
+            english=" I\'m sorry to say that if you don\'t\nhave any [CS:I]Prize Tickets[CR], you can\'t participate in\nthe drawing...",
+        });
+        message_Close();
+        return;
+        // This is a label that the bonus will START from!
+        §redeem_bonus_prize;
+        debug_Print("redeem_bonus_prize");
+        $LOTTERY_RESULT = value($LOCAL0);
+        $LOTTERY_RESULT += 1;
+    } else { 
+            message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+            message_Talk({
+                english=" Select which Ticket to use.",
+            });
+            switch(message_SwitchMenu2(16,1,$SCENARIO_MAIN_BIT_FLAG_BACKUP)) {
+                case menu("[CS:I]Prize Ticket[CR]"):
+                    item_Set(0,169,0);
+                    $LOTTERY_RESULT = 1;
+                    break;
+                case menu("[CS:I]Silver Ticket[CR]"):
+                    item_Set(0,170,0);
+                    $LOTTERY_RESULT = 2;
+                    break;
+                case menu("[CS:I]Gold Ticket[CR]"):
+                    item_Set(0,171,0);
+                    $LOTTERY_RESULT = 3;
+                    break;
+                case menu("[CS:I]Prism Ticket[CR]"):
+                    item_Set(0,172,0);
+                    $LOTTERY_RESULT = 4;
+                    break;
+                case menu("Cancel"):
+                    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+                    message_Talk({
+                        english=" You want to cancel?",
+                    });
+                    message_Close();
+                    ProcessSpecial(65, $SCENARIO_MAIN_BIT_FLAG_BACKUP,$SCENARIO_MAIN_BIT_FLAG);
+                    return;
+            }
+            ProcessSpecial(65, $SCENARIO_MAIN_BIT_FLAG_BACKUP,$SCENARIO_MAIN_BIT_FLAG);
+            message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+            message_Talk({
+                english=" Draw a [s_item:0]?",
+            });
+            switch ( message_SwitchMenu(0, 1) ) {
+                case menu({
+                    english="Yes",
+                }):
+                    ProcessSpecial(74,0,0); // Remove one copy of the ticket currently stored. 
+                    break;
+                case menu({
+                    english="No",
+                }):
+                default:
+                    jump @return_to_main_menu;
+            }
+    }
+    if (debug) {
+        message_Mail({
+            english="[M:D2]What will you do?",
+        });
+        switch ( message_SwitchMenu(0, 1) ) {
+            case menu({
+                english="[M:D2]Leave it to chance",
+            }):
+            default:
+                jump @randomize;
+            case menu({
+                english="[M:D2]Lose",
+            }):
+                $LOTTERY_RESULT += 0; 
+                break;
+            case menu({
+                english="[M:D2]Win",
+            }):
+                $LOTTERY_RESULT += 8;
+                break;
+            case menu({
+                english="[M:D2]Look like a big win, but lose",
+            }):
+                $LOTTERY_RESULT += 16;
+                break;
+            case menu({
+                english="[M:D2]Win big",
+            }):
+                $LOTTERY_RESULT += 24;
+                break;
+        }
+    } else {
+        §randomize;
+        switch($LOTTERY_RESULT) { // Each ticket has unique odds of winning!
+            case 1:     // Prize Ticket: 50/100 to lose, 30/100 to win, 15/100 to big loss, 5/100 to big win.
+                switch(random(100)) {
+                    case <= 50:
+                        $LOTTERY_RESULT += 0; // Loss
+                        break;
+                    case <= 80:
+                        $LOTTERY_RESULT += 8; // Win
+                        break;
+                    case <= 95:
+                        $LOTTERY_RESULT += 16; // Big Loss
+                        break;
+                    default:
+                        $LOTTERY_RESULT += 24; // Big Win
+                        break;
+                }
+                break;
+            case 2:
+                switch(random(100)) { // Silver Ticket: 50/100 to lose, 40/100 to win, 5/100 to big loss, 5/100 to big win.
+                    case <= 50:
+                        $LOTTERY_RESULT += 0; // Loss
+                        break;
+                    case <= 90:
+                        $LOTTERY_RESULT += 8; // Win
+                        break;
+                    case <= 95:
+                        $LOTTERY_RESULT += 16; // Big Loss
+                        break;
+                    default:
+                        $LOTTERY_RESULT += 24; // Big Win
+                        break;
+                }
+                break;                
+            case 3:
+                switch(random(100)) { // Gold Ticket: 40/100 to lose, 40/100 to win, 10/100 to big loss, 10/100 to big win.
+                    case <= 40:
+                        $LOTTERY_RESULT += 0; // Loss
+                        break;
+                    case <= 80:
+                        $LOTTERY_RESULT += 8; // Win
+                        break;
+                    case <= 90:
+                        $LOTTERY_RESULT += 16; // Big Loss
+                        break;
+                    default:
+                        $LOTTERY_RESULT += 24; // Big Win
+                        break;
+                }
+                break;                
+            case 4:
+                switch(random(100)) { // Prism Ticket: 30/100 to lose, 45/100 to win, 10/100 to big loss, 15/100 to big win.
+                    case <= 30:
+                        $LOTTERY_RESULT += 0; // Loss
+                        break;
+                    case <= 75:
+                        $LOTTERY_RESULT += 8; // Win
+                        break;
+                    case <= 85:
+                        $LOTTERY_RESULT += 16; // Big Loss
+                        break;
+                    default:
+                        $LOTTERY_RESULT += 24; // Big Win
+                        break;
+                }
+                break;                
+            case 5:    // Unused
+            case 6:    // Unused
+            case 7:    // Unused
+            default:    // Unused
+                $LOTTERY_RESULT += 0; // Lose
+                break;
+        }
+    }
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    message_Talk({
+        english=" OK, please select a color card.\nRed, Blue, or Yellow?",
+    });
+    switch ( message_SwitchMenu(0, 1) ) {
+        case menu({
+            english="Red",
+        }):
+        default:
+            message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+            message_Talk({
+                english=" OK, Red then.",
+            });
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            with (actor ACTOR_NPC_SOONANSU) {
+                SetAnimation(22);
+            }
+            with (actor ACTOR_NPC_SOONANSU) {
+                WaitAnimation();
+            }
+            message_SetFace(ACTOR_NPC_SOONANSU, FACE_HAPPY, FACE_POS_BOTTOM_R_FACEOUTW);
+            message_Talk({
+                english=" Right! Red!",
+            });
+            WaitExecuteLives(ACTOR_NPC_SOONANSU);
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            break;
+        case menu({
+            english="Blue",
+        }):
+            message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+            message_Talk({
+                english=" OK, Blue then.",
+            });
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            with (actor ACTOR_NPC_SOONANSU) {
+                SetAnimation(22);
+            }
+            with (actor ACTOR_NPC_SOONANSU) {
+                WaitAnimation();
+            }
+            message_SetFace(ACTOR_NPC_SOONANSU, FACE_HAPPY, FACE_POS_BOTTOM_R_FACEOUTW);
+            message_Talk({
+                english=" Right! Blue!",
+            });
+            WaitExecuteLives(ACTOR_NPC_SOONANSU);
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            break;
+        case menu({
+            english="Yellow",
+        }):
+            message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+            message_Talk({
+                english=" OK, Yellow then.",
+            });
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            with (actor ACTOR_NPC_SOONANSU) {
+                SetAnimation(22);
+            }
+            with (actor ACTOR_NPC_SOONANSU) {
+                WaitAnimation();
+            }
+            message_SetFace(ACTOR_NPC_SOONANSU, FACE_HAPPY, FACE_POS_BOTTOM_R_FACEOUTW);
+            message_Talk({
+                english=" Right! Yellow!",
+            });
+            WaitExecuteLives(ACTOR_NPC_SOONANSU);
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            break;
+    }
+    end;
+    hold;
+    §recycle_more;
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD); 
+    message_Talk(" Will you recycle anything else?");
+    switch ( message_SwitchMenu(2, 1) ) {
+        case menu({
+            english="Yes",
+        }):
+            message_Close();
+            jump @check_if_offer;
+        case menu({
+            english="No",
+        }):
+        default:
+            message_Close();
+            jump @return_to_main_menu;
+            end;
+    }
+}
+
+    macro AssignTrade($received_id,$meta_data,$ticket_id,$ticket_odds,$num1,$id1,$num2,$id2,$num3,$id3,$numRawst) {
+        item_Set(0,$received_id, $meta_data); // The desired item with specified metadata will be in slot 0!
+        $LOCAL0 = $ticket_id; // The bonus ticket type will be stored here! 0-3 is Prize Thru Prism.
+        $LOCAL1 = $ticket_odds; // The odds of getting that ticket type after a successful trade will be here!
+        item_Set(1,$id1,0); // 1st type of item to be traded is stored in slot 1!
+        $GROUND_ENTER_LINK_BACKUP[0] = $num1; // Amount of this item will be stored here!
+        item_Set(2,$id2,0); // 2nd type of item to be traded is stored in slot 2!
+        $GROUND_ENTER_LINK_BACKUP[1] = $num2; // Amount of this item will be stored here!
+        item_Set(3,$id3,0); // 3rd type of item to be traded is stored in slot 3!
+        $GROUND_ENTER_LINK_BACKUP[2] = $num3; // Amount of this item will be stored here!
+        // Note: using "item_Set(4,X,X)" will cause corruptive effects, so all custom trades must use 3 unique item types!
+        // The only base-game trade that uses 4 items, the Link Box, uses Rawst Berries for the 4th slot.
+        // So our 4th trade item, if it exists, will ALWAYS be Rawst Berries.
+        $GROUND_ENTER_LINK_BACKUP[3] = $numRawst; // Amount of "extra" Rawst Berries will be stored here!
+    }
+    
+    macro AssignTicketTrade($ticket_id,$bonus_ticket_id,$ticket_odds,$num_items_per_ticket) {
+        item_Set(0,$ticket_id, 0); // The desired ticket will be in slot 0!
+        $LOCAL0 = $bonus_ticket_id; // The bonus ticket type will be stored here! 0-3 is Prize Thru Prism.
+        $LOCAL1 = $ticket_odds; // The odds of getting that ticket type after a successful trade will be here!
+        $GROUND_ENTER_LINK_BACKUP[0] = $num_items_per_ticket; // Amount of items this ticket requires will be stored here!
+    }
+    
+    macro RecycleMainMenu() {
+        debug_Print("RecycleMainMenu");
+        if($EVENT_LOCAL != 0) { // If lottery just completed...
+            jump @anything_else;
+        }
+        message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);    
+        message_Talk(" Hello!\nWelcome to the Recycle Shop, where everyone\nis happy! Hey, why not?");
+        §main_menu;
+        switch(message_SwitchMenu(4,1)) {
+            case menu("Recycle"):
+                $LOTTERY_RESULT = 0;
+                return; // Exit the macro, continue to use the actual script!
+            case menu("Prize Ticket"):
+                $LOTTERY_RESULT = 1; // Browsing Recycle
+                return; // Exit the macro, continue to use the actual script!
+            case menu("Info"):
+                message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+                message_Talk(" During your explorations, you've\nundoubtedly collected a few extra, unnecessary\nitems, yes?");
+                message_Talk(" And when you try to sell your\nunwanted items, you don't get much money for\nthem, am I right?");
+                message_Talk(" It's so frustrating, you just\nwant to throw them out![K] But isn't\nthat wasteful?");
+                message_Talk(" That's why we've set up this\nRecycle Shop.");
+                message_Talk(" It's a great service, where you\ncan trade in your unwanted items for things\nthat you need!");
+                message_Talk(" The items from your Treasure\nBag and storage are presented together, so you\ndon't have to waste time moving them around!");
+                message_Talk(" You can recycle any item, as\nlong as it's not a Throwing Item, like a[CS:I] Stick[CR].");
+                message_Talk(" Plus, there are fun Prizes\navailable with [CS:I]Prize Tickets[CR], so make sure\nto recycle!");
+                message_Close();
+                §anything_else;
+                message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+                message_Talk(" Would you like anything else?");
+                jump @main_menu;
+            case menu("Cancel"):
+            default:
+                $EVENT_LOCAL = 0;
+                $LOTTERY_RESULT = 0;
+                message_Close();
+                item_Set(0,0,0);
+                end;
+                break;
+        }
+        message_Close();
+        item_Set(0,0,0);
+        // Everything happens inside this macro!
+    }

@@ -1,0 +1,266 @@
+def 0 {
+    message_Close();
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        Turn2Direction(4, 10, DIR_UP);
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    Wait(10);
+    with (actor ACTOR_NPC_SOONANO) {
+        Turn2Direction(4, 10, DIR_RIGHT);
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANO);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(23);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        WaitAnimation();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    se_Play(8962);
+    with (actor ACTOR_NPC_SOONANO) {
+        SetEffect(EFFECT_QUESTION_MARK, 3);
+    }
+    with (actor ACTOR_NPC_SOONANO) {
+        WaitEffect();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANO);
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    message_Talk({
+        english=" Is it a win? Is it not?",
+    });
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);    
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(24);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        WaitAnimation();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(2);
+    }
+    Wait(15);
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    message_Talk({
+        english=" So is it a win or not?",
+    });
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(24);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        WaitAnimation();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(2);
+    }
+    bgm_FadeOut(30);
+    se_Play(8967);
+    with (actor ACTOR_NPC_SOONANO) {
+        SetEffect(EFFECT_EXCLAMATION_MARK, 3);
+    }
+    with (actor ACTOR_NPC_SOONANO) {
+        WaitEffect();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANO);
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    message_Talk({
+        english=" Huh...wait. Don\'t tell me...[K]\nIs it a big win...?",
+    });
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    with (actor ACTOR_UNIT_NPC1) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC2) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC3) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC4) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC1) {
+        Move2PositionMark(33152, Position<'m0', 44.5, 25.5>);
+    }
+    with (actor ACTOR_UNIT_NPC2) {
+        Move2PositionMark(33152, Position<'m1', 43, 23.5>);
+    }
+    with (actor ACTOR_UNIT_NPC3) {
+        Move2PositionMark(33152, Position<'m2', 44, 21>);
+    }
+    with (actor ACTOR_UNIT_NPC4) {
+        Move2PositionMark(33152, Position<'m3', 47, 26.5>);
+    }
+    with (actor ACTOR_PLAYER) {
+        Move2PositionMark(1, Position<'m4', 53.5, 22.5>);
+    }
+    Wait(5);
+    with (actor ACTOR_ATTENDANT1) {
+        Move2PositionMark(33152, Position<'m5', 53.5, 24.5>);
+    }
+    WaitExecuteLives(ACTOR_PLAYER);
+    with (actor ACTOR_PLAYER) {
+        Turn2Direction(4, 10, DIR_UP);
+    }
+    WaitExecuteLives(ACTOR_ATTENDANT1);
+    with (actor ACTOR_ATTENDANT1) {
+        Turn2Direction(4, 10, DIR_UP);
+    }
+    WaitExecuteLives(ACTOR_ATTENDANT1);
+    with (actor ACTOR_UNIT_NPC3) {
+        Turn2Direction(4, 10, DIR_RIGHT);
+    }
+    with (actor ACTOR_UNIT_NPC2) {
+        Turn2Direction(4, 10, DIR_RIGHT);
+    }
+    Wait(60);
+    se_Play(8961);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetEffect(EFFECT_SWEAT_DROP, 3);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        WaitEffect();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    message_SetFace(ACTOR_NPC_SOONANSU, FACE_NORMAL, FACE_POS_BOTTOM_R_FACEINW);
+    message_Talk({
+        english=" .........",
+    });
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    message_Talk({
+        english=" .........[K]\nDon\'t tell me... [K]It\'s a loss, right?",
+    });
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    with (actor ACTOR_NPC_SOONANSU) {
+        Turn2Direction(1, 2, DIR_DOWN);
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    Wait(15);
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(22);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        WaitAnimation();
+    }
+    message_SetFace(ACTOR_NPC_SOONANSU, FACE_HAPPY, FACE_POS_BOTTOM_R_FACEOUTW);
+    message_Talk({
+        english=" That\'s right!",
+    });
+    WaitExecuteLives(ACTOR_NPC_SOONANSU);
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    bgm_PlayFadeIn(BGM_MISSION_FAILURE, 0, 256);
+    with (actor ACTOR_UNIT_NPC1) {
+        SetAnimation(11);
+    }
+    with (actor ACTOR_UNIT_NPC2) {
+        SetAnimation(11);
+    }
+    with (actor ACTOR_UNIT_NPC3) {
+        SetAnimation(11);
+    }
+    with (actor ACTOR_UNIT_NPC4) {
+        SetAnimation(11);
+    }
+    WaitBgm(BGM_MISSION_FAILURE);
+    se_Play(8961);
+    with (actor ACTOR_NPC_SOONANO) {
+        SetEffect(EFFECT_SWEAT_DROP_SLOW, 3);
+    }
+    with (actor ACTOR_NPC_SOONANO) {
+        WaitEffect();
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANO);
+    message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+    message_Talk({
+        english=" Hey...\nWhy not calm down...?",
+    });
+    message_Close();
+    with (actor ACTOR_UNIT_NPC1) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC2) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC3) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_UNIT_NPC4) {
+        SetAnimation(2);
+    }
+    Wait(10);
+    with (actor ACTOR_UNIT_NPC3) {
+        Move2PositionMark(1, Position<'m6', 33, 35.5>);
+    }
+    with (actor ACTOR_UNIT_NPC2) {
+        Move2PositionMark(1, Position<'m7', 28, 32.5>);
+    }
+    with (actor ACTOR_UNIT_NPC1) {
+        Move2PositionMark(1, Position<'m8', 33, 29>);
+    }
+    with (actor ACTOR_UNIT_NPC4) {
+        Move2PositionMark(1, Position<'m9', 37.5, 32.5>);
+    }
+    with (actor ACTOR_NPC_SOONANSU) {
+        SetAnimation(2);
+    }
+    with (actor ACTOR_NPC_SOONANO) {
+        Turn2DirectionLives(4, 10, ACTOR_PLAYER);
+    }
+    WaitExecuteLives(ACTOR_NPC_SOONANO);
+    bgm_PlayFadeIn(BGM_SPINDAS_CAFE, 0, 256);
+    message_Talk({
+        english=" Sorry to have gotten your hopes\nup.[K] Why not take this consolation prize?",
+    });
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    // Note: Big Losses have the same prize pool as normal losses!
+    switch ($LOTTERY_RESULT) {
+        case 17:
+            item_SetTableData(0,4);
+            break;
+        case 18:
+            item_SetTableData(0,7);
+            break;
+        case 19:
+            item_SetTableData(0,10);
+            break;
+        case 20:
+            item_SetTableData(0,13);
+            break;
+        case > 20:
+        default:
+            break;
+    }
+    me_Play(4);
+    message_Mail({
+        english="[CN][hero] received the\n[CN][s_item:0]!",
+    });
+    WaitMe(4);
+    CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+    switch ( ProcessSpecial(PROCESS_SPECIAL_IS_BAG_FULL, 0, 0) ) {
+        case 0:
+            switch ( ProcessSpecial(PROCESS_SPECIAL_ADD_TABLE_ITEM_TO_BAG, 0, 0) ) { }
+            break;
+        case 1:
+            message_SetFace(ACTOR_NPC_SOONANO, FACE_NORMAL, FACE_POS_STANDARD);
+            message_Talk({
+                english=" Huh? Your Bag\'s full?",
+            });
+            message_Talk({
+                english=" OK, I\'ll just send this to your\nstorage, then.",
+            });
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            message_Mail({
+                english="[CN]The [s_item:0] was\n[CN]sent to storage.",
+            });
+            CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
+            switch ( ProcessSpecial(PROCESS_SPECIAL_ADD_TABLE_ITEM_TO_STORAGE, 0, 0) ) { }
+            break;
+    }
+    end;
+}
