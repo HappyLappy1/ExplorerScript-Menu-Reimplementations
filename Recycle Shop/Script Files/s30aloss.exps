@@ -75,16 +75,16 @@ def 0 {
     });
     CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
     switch ($LOTTERY_RESULT) {
-        case 1:
+        case 1: // Prize
             item_SetTableData(0,4);
             break;
-        case 2:
+        case 2: // Silver
             item_SetTableData(0,7);
             break;
-        case 3:
+        case 3: // Gold
             item_SetTableData(0,10);
             break;
-        case 4:
+        case 4: // Prism
             item_SetTableData(0,13);
             break;
         case > 4:
