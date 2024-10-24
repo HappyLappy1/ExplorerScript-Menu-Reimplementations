@@ -852,19 +852,19 @@ def 0 {
     });
     CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
     switch ($LOTTERY_RESULT) {
-        case 25:
+        case 25: // Prize
             item_SetTableData(0,6);
             break;
-        case 26:
+        case 26: // Silver
             item_SetTableData(0,9);
             break;
-        case 27:
+        case 27: // Gold
             item_SetTableData(0,12);
             break;
-        case 28:
+        case 28: // Prism
             item_SetTableData(0,15);
             break;
-        case > 28:
+        case > 28: // Unknown
         default:
             break;
     }
