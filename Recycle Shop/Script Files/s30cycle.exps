@@ -1119,6 +1119,8 @@ def 0 {
         default:
             message_Close();
             jump @return_to_main_menu;
+            message_Talk(" Come back anytime!");
+            message_Close();
             end;
     }
 }
@@ -1182,6 +1184,8 @@ def 0 {
                 $LOTTERY_RESULT = 0;
                 message_Close();
                 item_Set(0,0,0);
+                message_Talk(" Come back anytime!");
+                message_Close();
                 end;
                 break;
         }
