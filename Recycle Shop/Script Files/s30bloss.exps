@@ -220,19 +220,19 @@ def 0 {
     CallCommon(CORO_MESSAGE_CLOSE_WAIT_FUNC);
     // Note: Big Losses have the same prize pool as normal losses!
     switch ($LOTTERY_RESULT) {
-        case 17:
+        case 17: // Prize
             item_SetTableData(0,4);
             break;
-        case 18:
+        case 18: // Silver
             item_SetTableData(0,7);
             break;
-        case 19:
+        case 19: // Gold
             item_SetTableData(0,10);
             break;
-        case 20:
+        case 20: // Prism
             item_SetTableData(0,13);
             break;
-        case > 20:
+        case > 20: // Other
         default:
             break;
     }
