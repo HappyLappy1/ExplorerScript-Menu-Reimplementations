@@ -1,0 +1,2973 @@
+/*  
+    QuizMenuTool QMT001 (By Happylappy)
+    This script handles the quiz introduction, the questions, and determines which nature got the most points! 
+    No custom special processes are used, so none need to be changed.
+    Add your questions to the hulking macro at the bottom, and be sure to read all of my comments at each TODO!
+*/
+
+def 0 {
+    debug_Print("QMT001 Initiated!");
+    $SCENARIO_SUB4 = value($PLAYER_KIND);
+    $SCENARIO_SUB5 = value($ATTENDANT1_KIND);
+    $SCENARIO_SUB6 = value($PLAYER_KIND_BACKUP);
+    $SCENARIO_SUB7 = value($ATTENDANT1_KIND_BACKUP);
+    back2_SetMode(4);
+    screen_FadeOut(1,0);
+    screen2_FadeOut(1,0);
+    back2_SetGround(LEVEL_S02P01A);
+    back_SetGround(LEVEL_S02P01A);
+    message_Explanation('[CN]Welcome![C]');
+    message_Explanation('[CN]This is the portal that leads to the\n[CN]world inhabited only by Pokèmon.[C]');
+    message_Explanation('[CN]Beyond this gateway, many new\n[CN]adventures and fresh experiences\n[CN]await your arrival![C]');
+    message_Explanation('[CN]Before you depart for adventure,\n[CN]you must answer some questions.[C]');
+    message_Explanation('[CN]Be truthful when you answer them![C]');
+    message_Explanation('[CN]Now, are you ready?[C]');
+    message_Explanation('[CN]Then...[K]let the questions begin![C]');
+    message_Close();
+    screen_FadeOutAll(1, 0);
+    bgm_PlayFadeIn(BGM_WELCOME_TO_THE_WORLD_OF_POKEMON, 0, 255);
+    screen2_FadeIn(0, 60);
+    screen_FadeIn(0, 0);
+    screen_FadeInAll(1, 60);
+    call @clear_all_vars;
+    message_Monologue('Did you play ~22Explorers of Time~22 or ~22Explorers\nof Darkness~22?');
+    switch(message_SwitchMenu(0,0)) {
+        case menu('Yes'):
+            // Will enable $PLAY_OLD_GAME if true! 
+            $BIT_FUWARANTE_LOCAL[0] = 1;
+            break;
+        case menu('No'):
+            // Will do nothing if false! 
+            $BIT_FUWARANTE_LOCAL[0] = 0;
+            break;
+    }
+    // TODO: Add custom Beginning question if desired!
+    /*
+    message_Monologue('Did you play ~22Explorers of Sky~22?');
+    switch(message_SwitchMenu(0,0)) {
+        case menu('Yes'):
+            $BIT_FUWARANTE_LOCAL[1] = 1; // Use this as you see fit!
+            break;
+        case menu('No'):
+            $BIT_FUWARANTE_LOCAL[1] = 0; // Use this as you see fit!
+            break;
+        case menu('My lawyer told me to say yes!'):
+            $BIT_FUWARANTE_LOCAL[1] = 1; // Use this as you see fit!
+            break;
+    }
+    */ 
+    // TODO: change these parameters to reflect the total number of questions (64), and the number to ask in the quiz (8). 
+            // Do NOT edit the variables unless you know what you're doing!
+    ~LoopQuestions(64,8,$VERSION, $CRYSTAL_COLOR_01, $CRYSTAL_COLOR_02, $CRYSTAL_COLOR_03, $COMPULSORY_SAVE_POINT, $COMPULSORY_SAVE_POINT_SIDE, $SCENARIO_SELECT_BACKUP, $GROUND_ENTER, $GROUND_ENTER_LINK, $GROUND_GETOUT, $GROUND_MAP, $GROUND_PLACE, $GROUND_ENTER_BACKUP, $GROUND_ENTER_LINK_BACKUP, $GROUND_GETOUT_BACKUP, $GROUND_MAP_BACKUP, $GROUND_PLACE_BACKUP, $DUNGEON_SELECT, $DUNGEON_ENTER, $DUNGEON_ENTER_MODE, $DUNGEON_ENTER_INDEX, $DUNGEON_RESULT, $GROUND_START_MODE, $DUNGEON_ENTER_BACKUP, $DUNGEON_ENTER_MODE_BACKUP, $DUNGEON_ENTER_INDEX_BACKUP, $DUNGEON_RESULT_BACKUP, $GROUND_START_MODE_BACKUP, $REQUEST_CLEAR_COUNT, $PLAYER_KIND, $ATTENDANT1_KIND, $ATTENDANT2_KIND, $PLAYER_KIND_BACKUP, $ATTENDANT1_KIND_BACKUP, $ATTENDANT2_KIND_BACKUP, $HERO_FIRST_KIND, $PARTNER_FIRST_KIND, $RANDOM_REQUEST_NPC03_KIND, $WORLD_MAP_LEVEL, $EVENT_LOCAL, $DUNGEON_EVENT_LOCAL, $LOTTERY_RESULT, $ITEM_BACKUP, $ITEM_BACKUP_KUREKURE, $ITEM_BACKUP_TAKE, $ITEM_BACKUP_GET, $REQUEST_THANKS_RESULT_KIND, $REQUEST_THANKS_RESULT_VARIATION, $SUB30_SPOT_LEVEL, $TEAM_RANK_EVENT_LEVEL, $PLAY_OLD_GAME);
+    // TODO: Add custom ending question if desired!
+    /*
+    message_Monologue('Have you participated in a [CS:C]Mystery Mail[CR]\nEvent before?');
+    switch(message_SwitchMenu(0,0)) {
+        case menu('Yes'):
+            $BIT_FUWARANTE_LOCAL[2] = 1; // Use this as you see fit!
+            break;
+        case menu('No'):
+            $BIT_FUWARANTE_LOCAL[2] = 0; // Use this as you see fit!
+            break;
+        case menu('Never heard of it, but sounds stupid!'):
+            $BIT_FUWARANTE_LOCAL[2] = 0; // Use this as you see fit!
+            break;
+     }
+    */
+    message_Monologue('Are you male or female?');
+    switch(message_SwitchMenu(0,0)) {
+        case menu('Male'):
+            $BIT_FUWARANTE_LOCAL[4] = 1; // Is male, will prevent starters that are female exclusive
+            break;
+        case menu('Female'):
+            $BIT_FUWARANTE_LOCAL[3] = 1; // Is female, will prevent starters that are male exclusive
+            break;
+        case menu('Surprise me!'):
+            // Don't prevent any exclusive starters!
+            break;
+     }
+    // TODO: If you fiddle with this, make sure the right natures get their bonus points for having played Time/Darkness!
+    // Write a similar macro if you want to do the same for "Played Explorers of Sky"
+    ~AddPtsForTD($VERSION, $CRYSTAL_COLOR_01, $CRYSTAL_COLOR_02, $CRYSTAL_COLOR_03, $COMPULSORY_SAVE_POINT, $COMPULSORY_SAVE_POINT_SIDE, $SCENARIO_SELECT_BACKUP, $GROUND_ENTER, $GROUND_ENTER_LINK, $GROUND_GETOUT, $GROUND_MAP, $GROUND_PLACE, $GROUND_ENTER_BACKUP, $GROUND_ENTER_LINK_BACKUP, $GROUND_GETOUT_BACKUP, $GROUND_MAP_BACKUP, $GROUND_PLACE_BACKUP, $DUNGEON_SELECT, $DUNGEON_ENTER, $DUNGEON_ENTER_MODE, $DUNGEON_ENTER_INDEX, $DUNGEON_RESULT, $GROUND_START_MODE, $DUNGEON_ENTER_BACKUP, $DUNGEON_ENTER_MODE_BACKUP, $DUNGEON_ENTER_INDEX_BACKUP, $DUNGEON_RESULT_BACKUP, $GROUND_START_MODE_BACKUP, $REQUEST_CLEAR_COUNT, $PLAYER_KIND, $ATTENDANT1_KIND, $ATTENDANT2_KIND, $PLAYER_KIND_BACKUP, $ATTENDANT1_KIND_BACKUP, $ATTENDANT2_KIND_BACKUP, $HERO_FIRST_KIND, $PARTNER_FIRST_KIND, $RANDOM_REQUEST_NPC03_KIND, $WORLD_MAP_LEVEL, $EVENT_LOCAL, $DUNGEON_EVENT_LOCAL, $LOTTERY_RESULT, $ITEM_BACKUP, $ITEM_BACKUP_KUREKURE, $ITEM_BACKUP_TAKE, $ITEM_BACKUP_GET, $REQUEST_THANKS_RESULT_KIND, $REQUEST_THANKS_RESULT_VARIATION, $SUB30_SPOT_LEVEL, $TEAM_RANK_EVENT_LEVEL, $PLAY_OLD_GAME);
+
+
+    debug_PrintFlag($LOCAL0,'Pre');
+    $LOCAL1 = 0;
+    §label_redo_check;
+    $SCENARIO_MAIN = 0;
+    $SCENARIO_SIDE = 0;
+    ~CompareNaturePts($VERSION,0);
+    ~CompareNaturePts($CRYSTAL_COLOR_01,1);
+    ~CompareNaturePts($CRYSTAL_COLOR_02,2);
+    ~CompareNaturePts($CRYSTAL_COLOR_03,3);
+    ~CompareNaturePts($COMPULSORY_SAVE_POINT,4);
+    ~CompareNaturePts($COMPULSORY_SAVE_POINT_SIDE,5);
+    ~CompareNaturePts($SCENARIO_SELECT_BACKUP,6);
+    ~CompareNaturePts($GROUND_ENTER,7);
+    ~CompareNaturePts($GROUND_ENTER_LINK,8);
+    ~CompareNaturePts($GROUND_GETOUT,9);
+    ~CompareNaturePts($GROUND_MAP,10);
+    ~CompareNaturePts($GROUND_PLACE,11);
+    ~CompareNaturePts($GROUND_ENTER_BACKUP,12);
+    ~CompareNaturePts($GROUND_ENTER_LINK_BACKUP,13);
+    ~CompareNaturePts($GROUND_GETOUT_BACKUP,14);
+    ~CompareNaturePts($GROUND_MAP_BACKUP,15);
+    ~CompareNaturePts($GROUND_PLACE_BACKUP,16);
+    ~CompareNaturePts($DUNGEON_SELECT,17);
+    ~CompareNaturePts($DUNGEON_ENTER,18);
+    ~CompareNaturePts($DUNGEON_ENTER_MODE,19);
+    ~CompareNaturePts($DUNGEON_ENTER_INDEX,20);
+    ~CompareNaturePts($DUNGEON_RESULT,21);
+    ~CompareNaturePts($GROUND_START_MODE,22);
+    ~CompareNaturePts($DUNGEON_ENTER_BACKUP,23);
+    ~CompareNaturePts($DUNGEON_ENTER_MODE_BACKUP,24);
+    ~CompareNaturePts($DUNGEON_ENTER_INDEX_BACKUP,25);
+    ~CompareNaturePts($DUNGEON_RESULT_BACKUP,26);
+    ~CompareNaturePts($GROUND_START_MODE_BACKUP,27);
+    ~CompareNaturePts($REQUEST_CLEAR_COUNT,28);
+    ~CompareNaturePts($PLAYER_KIND,29);
+    ~CompareNaturePts($ATTENDANT1_KIND,30);
+    ~CompareNaturePts($ATTENDANT2_KIND,31);
+    ~CompareNaturePts($PLAYER_KIND_BACKUP,32);
+    ~CompareNaturePts($ATTENDANT1_KIND_BACKUP,33);
+    ~CompareNaturePts($ATTENDANT2_KIND_BACKUP,34);
+    ~CompareNaturePts($HERO_FIRST_KIND,35);
+    ~CompareNaturePts($PARTNER_FIRST_KIND,36);
+    ~CompareNaturePts($RANDOM_REQUEST_NPC03_KIND,37);
+    ~CompareNaturePts($WORLD_MAP_LEVEL,38);
+    ~CompareNaturePts($EVENT_LOCAL,39);
+    ~CompareNaturePts($DUNGEON_EVENT_LOCAL,40);
+    ~CompareNaturePts($LOTTERY_RESULT,41);
+    ~CompareNaturePts($ITEM_BACKUP,42);
+    ~CompareNaturePts($ITEM_BACKUP_KUREKURE,43);
+    ~CompareNaturePts($ITEM_BACKUP_TAKE,44);
+    ~CompareNaturePts($ITEM_BACKUP_GET,45);
+    ~CompareNaturePts($REQUEST_THANKS_RESULT_KIND,46);
+    ~CompareNaturePts($REQUEST_THANKS_RESULT_VARIATION,47);
+    ~CompareNaturePts($SUB30_SPOT_LEVEL,48);
+    ~CompareNaturePts($TEAM_RANK_EVENT_LEVEL,49);
+    ~CompareNaturePts($PLAY_OLD_GAME,50);
+     // If 1 or 0 members of the tie are left, will proceed with the currently stored victor in $LOCAL1. 
+    debug_PrintFlag($LOCAL1,"Winning Nature (or last tied nature)");
+    debug_PrintFlag($SCENARIO_SUB2, "Points of winning natures");
+    debug_PrintFlag($SCENARIO_MAIN, "Number of tied natures");
+    if($SCENARIO_MAIN > 1) {
+        $SCENARIO_SUB2 += 1;
+        debug_Print("Resolving a tie...");
+        jump @label_redo_check;
+    }
+    $SCENARIO_SUB2 = value($LOCAL1);
+    debug_PrintFlag($SCENARIO_SUB2,"Winning Nature:");
+    $PLAYER_KIND = value($SCENARIO_SUB4);
+    $ATTENDANT1_KIND = value($SCENARIO_SUB5);
+    $PLAYER_KIND_BACKUP = value($SCENARIO_SUB6);
+    $ATTENDANT1_KIND_BACKUP = value($SCENARIO_SUB7);
+    end;
+    
+    §clear_all_vars;
+    $LOCAL1 = 0;
+    $LOCAL0 = 0;
+    $CRYSTAL_COLOR_01 = 0;
+    $CRYSTAL_COLOR_02 = 0;
+    $CRYSTAL_COLOR_03 = 0;
+    $COMPULSORY_SAVE_POINT = 0;
+    $COMPULSORY_SAVE_POINT_SIDE = 0;
+    $SCENARIO_SELECT_BACKUP = 0;
+    $GROUND_ENTER = 0;
+    $GROUND_ENTER_LINK = 0;
+    $GROUND_GETOUT = 0;
+    $GROUND_MAP = 0;
+    $GROUND_PLACE = 0;
+    $GROUND_ENTER_BACKUP = 0;
+    $GROUND_ENTER_LINK_BACKUP = 0;
+    $GROUND_GETOUT_BACKUP = 0;
+    $GROUND_MAP_BACKUP = 0;
+    $GROUND_PLACE_BACKUP = 0;
+    $DUNGEON_SELECT = 0;
+    $DUNGEON_ENTER = 0;
+    $DUNGEON_ENTER_MODE = 0;
+    $DUNGEON_ENTER_INDEX = 0;
+    $DUNGEON_RESULT = 0;
+    $GROUND_START_MODE = 0;
+    $DUNGEON_ENTER_BACKUP = 0;
+    $DUNGEON_ENTER_MODE_BACKUP = 0;
+    $DUNGEON_ENTER_INDEX_BACKUP = 0;
+    $DUNGEON_RESULT_BACKUP = 0;
+    $GROUND_START_MODE_BACKUP = 0;
+    $REQUEST_CLEAR_COUNT = 0;
+    $PLAYER_KIND = 0;
+    $ATTENDANT1_KIND = 0;
+    $ATTENDANT2_KIND = 0;
+    $PLAYER_KIND_BACKUP = 0;
+    $ATTENDANT1_KIND_BACKUP = 0;
+    $ATTENDANT2_KIND_BACKUP = 0;
+    $HERO_FIRST_KIND = 0;
+    $PARTNER_FIRST_KIND = 0;
+    $RANDOM_REQUEST_NPC03_KIND = 0;
+    $WORLD_MAP_LEVEL = 0;
+    $EVENT_LOCAL = 0;
+    $DUNGEON_EVENT_LOCAL = 0;
+    $LOTTERY_RESULT = 0;
+    $ITEM_BACKUP = 0;
+    $ITEM_BACKUP_KUREKURE = 0;
+    $ITEM_BACKUP_TAKE = 0;
+    $ITEM_BACKUP_GET = 0;
+    $REQUEST_THANKS_RESULT_KIND = 0;
+    $REQUEST_THANKS_RESULT_VARIATION = 0;
+    $SUB30_SPOT_LEVEL = 0;
+    $TEAM_RANK_EVENT_LEVEL = 0;
+    $PLAY_OLD_GAME = 0;
+    return;
+
+
+}
+
+    macro CompareNaturePts($var,$index) {
+        if ($var == value($SCENARIO_SUB2) ) {
+            $LOCAL1 = $index;
+            $SCENARIO_MAIN += 1;
+            switch(random(2)) {
+               case 1:
+                   $var+= 1;
+               default:
+                   break;
+             }
+        }
+    }
+    // Note: If you answer yes to T/D, the game gives you points towards natures containing "new" pokemon. 
+    // This varies by gender, with different genders having different nature bonuses for playing T/D.
+    macro AddPtsForTD($nature_0, $nature_1, $nature_2, $nature_3, $nature_4, $nature_5, $nature_6, $nature_7, $nature_8, $nature_9, $nature_10, $nature_11, $nature_12, $nature_13, $nature_14, $nature_15, $nature_16, $nature_17, $nature_18, $nature_19, $nature_20, $nature_21, $nature_22, $nature_23, $nature_24, $nature_25, $nature_26, $nature_27, $nature_28, $nature_29, $nature_30, $nature_31, $nature_32, $nature_33, $nature_34, $nature_35, $nature_36, $nature_37, $nature_38, $nature_39, $nature_40, $nature_41, $nature_42, $nature_43, $nature_44, $nature_45, $nature_46, $nature_47, $nature_48, $nature_49, $nature_50) {
+        if ($BIT_FUWARANTE_LOCAL[0]) {
+	    $nature_10 += 4; // Relaxed Nature gets points if you have played T/D before, regardless of gender!
+	    ~SumToLocal($nature_10);
+	    if($BIT_FUWARANTE_LOCAL[4]) { // Player chose "Male"
+	        $nature_7 += 4; // Hasty Nature gets points if you have played T/D before and are male!
+	        ~SumToLocal($nature_7);
+	        $nature_8 += 4; // Sassy Nature gets points if you have played T/D before and are male!
+	        ~SumToLocal($nature_8);
+            } elseif ($BIT_FUWARANTE_LOCAL[3]) { // Player chose "Female"
+	        $nature_3 += 4; // Jolly Nature gets points if you have played T/D before and are male!
+	        ~SumToLocal($nature_3);                
+            } else { // Player chose "Surprise Me"
+	        // Add pts to all of them for surprise!
+	        $nature_7 += 4;
+	        ~SumToLocal($nature_7);
+	        $nature_8 += 4;
+	        ~SumToLocal($nature_8);
+	        $nature_3 += 4;
+	        ~SumToLocal($nature_3); 
+	    }
+	
+        }
+    }
+
+	
+	
+	
+    // Note: This just keeps track of how many points the winning nature has. It's super important that we know this to make coding the tally syste easier...
+    macro SumToLocal($nature) {
+	if($SCENARIO_SUB2 < value($nature)) {
+	   $SCENARIO_SUB2 = value($nature);
+	   debug_PrintFlag($nature,"Leading Nature Pts!");
+	}
+	
+    }
+
+
+    // TODO: Add questions and alter nature point distribution as you see fit. Careful, this thing is huge!
+macro LoopQuestions($total,$choose,$nature_0, $nature_1, $nature_2, $nature_3, $nature_4, $nature_5, $nature_6, $nature_7, $nature_8, $nature_9, $nature_10, $nature_11, $nature_12, $nature_13, $nature_14, $nature_15, $nature_16, $nature_17, $nature_18, $nature_19, $nature_20, $nature_21, $nature_22, $nature_23, $nature_24, $nature_25, $nature_26, $nature_27, $nature_28, $nature_29, $nature_30, $nature_31, $nature_32, $nature_33, $nature_34, $nature_35, $nature_36, $nature_37, $nature_38, $nature_39, $nature_40, $nature_41, $nature_42, $nature_43, $nature_44, $nature_45, $nature_46, $nature_47, $nature_48, $nature_49, $nature_50) {                
+    while ($LOCAL1 < $choose) {            
+    switch(random($total)) {            
+        default:        
+            message_Mail(" Selected Out_Of_Bounds Question!");    
+        break;        
+        case 0:        
+        §Top_Of_Questions;        
+        if ($SCENARIO_TALK_BIT_FLAG[0]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[0] = 1;        
+        message_Monologue("Have you ever blurted something out without\nthinking about the consequences first?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_14 += 4;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_0 += 2;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 1:        
+        if ($SCENARIO_TALK_BIT_FLAG[1]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[1] = 1;        
+        message_Monologue("Do you want to be taller someday?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Totally!'):        
+                $nature_8 += 4;
+                ~SumToLocal( $nature_8); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Of course not.'):        
+                $nature_9 += 2;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 2:        
+        if ($SCENARIO_TALK_BIT_FLAG[2]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[2] = 1;        
+        message_Monologue("Once you\'ve decided something, do you see it\nthrough to the end?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_7 += 2;
+                ~SumToLocal($nature_7);
+                $nature_12 += 4;
+                ~SumToLocal($nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 3:        
+        if ($SCENARIO_TALK_BIT_FLAG[3]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[3] = 1;        
+        message_Monologue('Have you ever said "nice to meet you" to\nsomeone you\'ve met previously?');        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_14 += 4;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_9 += 2;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 4:        
+        if ($SCENARIO_TALK_BIT_FLAG[4]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[4] = 1;        
+        message_Monologue("You\'re at a movie theater. What are you there\nto see?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('An action movie.'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_8 += 2;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('A drama.'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('A romantic movie.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 5:        
+        if ($SCENARIO_TALK_BIT_FLAG[5]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[5] = 1;        
+        message_Monologue('Have you ever looked at your reflection in a\nmirror and thought, "What a cool person"?');        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Certainly!'):        
+                $nature_8 += 4;
+                ~SumToLocal( $nature_8); 
+                
+                $nature_3 += 2;
+                ~SumToLocal($nature_3);
+                $nature_5 += 2;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Well, not really…'):        
+                $nature_0 += 2;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 6:        
+        if ($SCENARIO_TALK_BIT_FLAG[6]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[6] = 1;        
+        message_Monologue("Have you ever thought that if you dug in your\nbackyard you could find buried treasure?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 7:        
+        if ($SCENARIO_TALK_BIT_FLAG[7]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[7] = 1;        
+        message_Monologue("Do you prefer to play outside rather than\ninside?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_14 += 4;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_9 += 2;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 8:        
+        if ($SCENARIO_TALK_BIT_FLAG[8]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[8] = 1;        
+        message_Monologue("You discover a beat-up-looking treasure chest\nin some ruins. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Open it!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_4 += 4;
+                ~SumToLocal($nature_4); 
+                
+                $nature_7 += 4;
+                ~SumToLocal($nature_7); 
+                
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                break;
+        case menu('Get help opening it.'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 9:        
+        if ($SCENARIO_TALK_BIT_FLAG[9]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[9] = 1;        
+        message_Monologue("Have you ever realized you were hogging the\nconversation?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_14 += 4;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_1 += 2;
+                ~SumToLocal($nature_1);
+                $nature_13 += 2;
+                ~SumToLocal($nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 10:        
+        if ($SCENARIO_TALK_BIT_FLAG[10]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[10] = 1;        
+        message_Monologue("When you see a switch, do you feel an\noverwhelming urge to flip it?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_9 += 2;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 11:        
+        if ($SCENARIO_TALK_BIT_FLAG[11]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[11] = 1;        
+        message_Monologue("Have you ever forgotten you bought something\nand bought another one?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_7 += 2;
+                ~SumToLocal($nature_7); 
+                
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 12:        
+        if ($SCENARIO_TALK_BIT_FLAG[12]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[12] = 1;        
+        message_Monologue("Do you think it\'s important to always aim to\nbe the best?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Of course!'):        
+                $nature_8 += 4;
+                ~SumToLocal( $nature_8); 
+                
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_9 += 4;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_12 += 2;
+                ~SumToLocal($nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 13:        
+        if ($SCENARIO_TALK_BIT_FLAG[13]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[13] = 1;        
+        message_Monologue("Do you want to be famous?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_8 += 4;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_10 += 2;
+                ~SumToLocal( $nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 14:        
+        if ($SCENARIO_TALK_BIT_FLAG[14]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[14] = 1;        
+        message_Monologue("If you saw someone doing something bad, could\nyou scold them?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Of course!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_8 += 4;
+                ~SumToLocal($nature_8);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Not really…'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 15:        
+        if ($SCENARIO_TALK_BIT_FLAG[15]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[15] = 1;        
+        message_Monologue("Have you ever told a joke that just completely\nfell flat?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_4 += 2;
+                ~SumToLocal($nature_4); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_9 += 4;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 16:        
+        if ($SCENARIO_TALK_BIT_FLAG[16]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[16] = 1;        
+        message_Monologue("Do you like lively parties?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 17:        
+        if ($SCENARIO_TALK_BIT_FLAG[17]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[17] = 1;        
+        message_Monologue("Are you truly sincere when you apologize?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Of course!'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('That\'s not easy to admit!'):        
+                $nature_6 += 4;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 18:        
+        if ($SCENARIO_TALK_BIT_FLAG[18]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[18] = 1;        
+        message_Monologue("Do you like karaoke?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_15 += 4;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_1 += 2;
+                ~SumToLocal($nature_1);
+                $nature_6 += 2;
+                ~SumToLocal($nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 19:        
+        if ($SCENARIO_TALK_BIT_FLAG[19]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[19] = 1;        
+        message_Monologue("You\'re hiking up a mountain when you reach\ndiverging paths. Which kind do you take?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Narrow.'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_5 += 2;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Wide.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_6 += 2;
+                ~SumToLocal($nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 20:        
+        if ($SCENARIO_TALK_BIT_FLAG[20]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[20] = 1;        
+        message_Monologue("Your friend takes a spectacular fall! What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Help my friend up!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Laugh! It\'s too funny!'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 21:        
+        if ($SCENARIO_TALK_BIT_FLAG[21]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[21] = 1;        
+        message_Monologue("You have a really important test tomorrow!\nWhat do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Study all night long.'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Wing it! I\'m sure I\'ll be fine!'):        
+                $nature_10 += 4;
+                ~SumToLocal( $nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Test?! I think I have a fever…'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 22:        
+        if ($SCENARIO_TALK_BIT_FLAG[22]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[22] = 1;        
+        message_Monologue('Have you ever accidentally called a teacher\n"Mom" or "Dad"?');        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_14 += 4;
+                ~SumToLocal($nature_14);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 23:        
+        if ($SCENARIO_TALK_BIT_FLAG[23]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[23] = 1;        
+        message_Monologue("There\'s a rumor around about a ghost haunting the school bathrooms! What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Scary… bathrooms!'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_6 += 2;
+                ~SumToLocal($nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Go in there anyway.'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_10 += 2;
+                ~SumToLocal($nature_10); 
+                
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 24:        
+        if ($SCENARIO_TALK_BIT_FLAG[24]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[24] = 1;        
+        message_Monologue("You\'re in class when you realize that you really\nhave to go to the restroom! What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Ask for permission.'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_15 += 4;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Sneak out.'):        
+                $nature_7 += 2;
+                ~SumToLocal($nature_7);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Hold on until class ends!'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 25:        
+        if ($SCENARIO_TALK_BIT_FLAG[25]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[25] = 1;        
+        message_Monologue("Do you think you have good study habits?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Well, I never lose at sports!'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 26:        
+        if ($SCENARIO_TALK_BIT_FLAG[26]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[26] = 1;        
+        message_Monologue("What\'s your studying style?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Working hard, every day.'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('If I remember to…'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_7 += 2;
+                ~SumToLocal($nature_7); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I just cover what I need to do.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I can\'t really do it alone…'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 27:        
+        if ($SCENARIO_TALK_BIT_FLAG[27]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[27] = 1;        
+        message_Monologue("You\'re packing your classroom\'s snacks for a\npicnic when you get hungry. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Eat just a tiny bit.'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Hold myself back & pack it all up.'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('What snacks? They\'re in my belly!'):        
+                $nature_14 += 4;
+                ~SumToLocal($nature_14);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 28:        
+        if ($SCENARIO_TALK_BIT_FLAG[28]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[28] = 1;        
+        message_Monologue("You see a cake that is past its expiration date,\nbut only by one day. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Not a problem! Chow time!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_10 += 2;
+                ~SumToLocal($nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Think about it briefly, then decide.'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Get someone to try it first.'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 29:        
+        if ($SCENARIO_TALK_BIT_FLAG[29]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[29] = 1;        
+        message_Monologue("You\'ve just stuffed yourself with a good meal when a great dessert arrives. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Eat it. Who cares if I\'m stuffed?'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Turn it down. It\'s too fattening!'):        
+                $nature_0 += 2;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Yum! I love dessert the most!'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_3 += 4;
+                ~SumToLocal($nature_3);
+                $nature_10 += 2;
+                ~SumToLocal($nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 30:        
+        if ($SCENARIO_TALK_BIT_FLAG[30]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[30] = 1;        
+        message_Monologue('Your friend has made a meal that\ntastes terrible.[K]\nThey ask, "How is it?" You say...?');        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('"Terrible!"'):        
+                $nature_2 += 2;
+                ~SumToLocal($nature_2); 
+                
+                $nature_13 += 2;
+                ~SumToLocal($nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Just smile.'):        
+                $nature_9 += 4;
+                ~SumToLocal($nature_9); 
+                
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('"Um… it\'s good…"'):        
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_6 += 2;
+                ~SumToLocal($nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 31:        
+        if ($SCENARIO_TALK_BIT_FLAG[31]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[31] = 1;        
+        message_Monologue("You\'re eating at a very fancy restaurant known\nfor its food. Which course do you select?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Seared steak.'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Healthy fish.'):        
+                $nature_0 += 2;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Anything! It\'s all good!'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 32:        
+        if ($SCENARIO_TALK_BIT_FLAG[32]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[32] = 1;        
+        message_Monologue("Everyone\'s sharing a dessert, and there\'s an\nextra piece. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Don\'t tell anyone.'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_6 += 2;
+                ~SumToLocal($nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Let everyone know.'):        
+                $nature_14 += 4;
+                ~SumToLocal($nature_14);
+                $nature_1 += 4;
+                ~SumToLocal($nature_1); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('First come, first served!'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 33:        
+        if ($SCENARIO_TALK_BIT_FLAG[33]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[33] = 1;        
+        message_Monologue("Your friend offers to treat you to dinner.\nWhat do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('I\'m there!'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Allow me.'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Thanks…'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 34:        
+        if ($SCENARIO_TALK_BIT_FLAG[34]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[34] = 1;        
+        message_Monologue("Everyone around you is laughing hard at\nsomething you think is pretty boring.\nWhat do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Nothing, really.'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Laugh along.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_6 += 2;
+                ~SumToLocal($nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('It depends on the situation.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_12 += 2;
+                ~SumToLocal($nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 35:        
+        if ($SCENARIO_TALK_BIT_FLAG[35]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[35] = 1;        
+        message_Monologue("Do you prefer to be busy or to have\na lot of free time?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Being busy.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_8 += 2;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Free time!'):        
+                $nature_9 += 4;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('In between.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 36:        
+        if ($SCENARIO_TALK_BIT_FLAG[36]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[36] = 1;        
+        message_Monologue("You\'re about to buy a popular game when\nsomeone else gets the last copy!\nHow do you feel?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Whatever.'):        
+                $nature_9 += 4;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Annoyed. I was here first!'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_10 += 4;
+                ~SumToLocal($nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I shed a few tears.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 37:        
+        if ($SCENARIO_TALK_BIT_FLAG[37]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[37] = 1;        
+        message_Monologue("You run into a new person that you haven\'t\ntalked to very much before. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Make small talk.'):        
+                $nature_9 += 2;
+                ~SumToLocal( $nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Say nothing!'):        
+                $nature_12 += 2;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Make an excuse to get away!'):        
+                $nature_6 += 4;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 38:        
+        if ($SCENARIO_TALK_BIT_FLAG[38]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[38] = 1;        
+        message_Monologue("Good news and bad news... Which one do you\nwant to hear first?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('The good news.'):        
+                $nature_10 += 4;
+                ~SumToLocal( $nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('The bad news.'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I don\'t want either.'):        
+                $nature_6 += 4;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 39:        
+        if ($SCENARIO_TALK_BIT_FLAG[39]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[39] = 1;        
+        message_Monologue("Hey, what\'s that?[K] There\'s someone behind you![K]\nSo...did you look just now?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Don\'t do that! You scared me!'):        
+                $nature_6 += 4;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('OK, I admit it. You tricked me.'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No way. I didn\'t fall for it.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_8 += 4;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Huh?! What?'):        
+                $nature_10 += 4;
+                ~SumToLocal($nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 40:        
+        if ($SCENARIO_TALK_BIT_FLAG[40]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[40] = 1;        
+        message_Monologue("How are your mornings?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Always in a rush!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_4 += 4;
+                ~SumToLocal($nature_4); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Always perfect.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('They are OK.'):        
+                $nature_6 += 4;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_1 += 2;
+                ~SumToLocal($nature_1); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 41:        
+        if ($SCENARIO_TALK_BIT_FLAG[41]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[41] = 1;        
+        message_Monologue("You\'ve been invited to a wonderful party. It\'s\ntime for the party to start, but there\'s nobody\nthere! You think...?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Did something happen?'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_1 += 4;
+                ~SumToLocal($nature_1); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Maybe I have the day wrong?'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_10 += 4;
+                ~SumToLocal($nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Let\'s get this party started!'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 42:        
+        if ($SCENARIO_TALK_BIT_FLAG[42]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[42] = 1;        
+        message_Monologue("You take off your shoes to realize your socks\nare two different colors!\nWhat do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Get embarrassed!'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Again?!'):        
+                $nature_14 += 4;
+                ~SumToLocal($nature_14);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I meant to do that!'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 43:        
+        if ($SCENARIO_TALK_BIT_FLAG[43]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[43] = 1;        
+        message_Monologue("Did you make any New Year\'s resolutions?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Of course!'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Nope.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('What are those?'):        
+                $nature_10 += 4;
+                ~SumToLocal( $nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 44:        
+        if ($SCENARIO_TALK_BIT_FLAG[44]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[44] = 1;        
+        message_Monologue("You\'re in a completely silent assembly when\nyou suddenly hear someone pass gas!\nHow do you react?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Roll on the floor laughing!'):        
+                $nature_3 += 4;
+                ~SumToLocal( $nature_3); 
+                
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Just let it go by…'):        
+                $nature_4 += 2;
+                ~SumToLocal($nature_4);
+                $nature_1 += 2;
+                ~SumToLocal($nature_1); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Who was that?!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 45:        
+        if ($SCENARIO_TALK_BIT_FLAG[45]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[45] = 1;        
+        message_Monologue("You\'re running a marathon, and at the start\nyou fall flat on your face! What will you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('I\'m not giving up yet!'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_2 += 2;
+                ~SumToLocal($nature_2); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Just give up.'):        
+                $nature_12 += 4;
+                ~SumToLocal( $nature_12); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Shout, "START OVER!"'):        
+                $nature_15 += 4;
+                ~SumToLocal($nature_15);
+                $nature_14 += 2;
+                ~SumToLocal($nature_14); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 46:        
+        if ($SCENARIO_TALK_BIT_FLAG[46]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[46] = 1;        
+        message_Monologue("You find something at a great bargain price!\nWhat do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Buy it right away!'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Think about whether I need it.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Demand an even bigger discount!'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 47:        
+        if ($SCENARIO_TALK_BIT_FLAG[47]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[47] = 1;        
+        message_Monologue("You\'ve been asked to do a difficult task.\nWhat will you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Do it myself.'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_2 += 2;
+                ~SumToLocal($nature_2); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Ask someone to help.'):        
+                $nature_1 += 2;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Make someone else do it!'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_8 += 2;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 48:        
+        if ($SCENARIO_TALK_BIT_FLAG[48]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[48] = 1;        
+        message_Monologue("You notice that a toy you bought for full price\nyesterday is marked down to half price today!\nHow do you feel?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Heartbroken…'):        
+                $nature_0 += 4;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Aaargh!!'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Bad timing, I guess…'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_9 += 4;
+                ~SumToLocal($nature_9); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 49:        
+        if ($SCENARIO_TALK_BIT_FLAG[49]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[49] = 1;        
+        message_Monologue("Your friend is running a little late to meet you.\nIs that OK?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_10 += 2;
+                ~SumToLocal($nature_10); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Not at all!'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_7 += 2;
+                ~SumToLocal($nature_7); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 50:        
+        if ($SCENARIO_TALK_BIT_FLAG[50]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[50] = 1;        
+        message_Monologue("Do you think that, no matter what, life\ngoes on?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('All the time!'):        
+                $nature_10 += 4;
+                ~SumToLocal( $nature_10); 
+                
+                $nature_3 += 2;
+                ~SumToLocal($nature_3);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Never.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 51:        
+        if ($SCENARIO_TALK_BIT_FLAG[51]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[51] = 1;        
+        message_Monologue("The phone\'s ringing![K] What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Answer right away!'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Wait a bit before answering.'):        
+                $nature_13 += 2;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Ignore it and let it ring.'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 52:        
+        if ($SCENARIO_TALK_BIT_FLAG[52]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[52] = 1;        
+        message_Monologue("Your friends seem to be making plans to hang\nout, just out of earshot. You think...");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('I want to go too!'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No big deal.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Will they invite me?'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 53:        
+        if ($SCENARIO_TALK_BIT_FLAG[53]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[53] = 1;        
+        message_Monologue("Do you think it\'s important to be fashionably\nlate?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Yes.'):        
+                $nature_15 += 4;
+                ~SumToLocal( $nature_15); 
+                
+                $nature_13 += 4;
+                ~SumToLocal($nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No.'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I don\'t know.'):        
+                $nature_1 += 4;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 54:        
+        if ($SCENARIO_TALK_BIT_FLAG[54]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[54] = 1;        
+        message_Monologue("You\'ve won big on a raffle ticket! You say...");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Woo-hoo!'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_3 += 2;
+                ~SumToLocal($nature_3);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('I can\'t believe it…'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('This is my little secret.'):        
+                $nature_13 += 4;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 55:        
+        if ($SCENARIO_TALK_BIT_FLAG[55]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[55] = 1;        
+        message_Monologue("Do you think blaming something you did on\nsomeone else is sometimes necessary?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Of course!'):        
+                $nature_13 += 4;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_8 += 4;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('No way!'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 56:        
+        if ($SCENARIO_TALK_BIT_FLAG[56]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[56] = 1;        
+        message_Monologue("Your friend suddenly won\'t listen to you, when\neverything was fine yesterday.\nWhat happened?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Maybe they\'re sick.'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('They\'re lost in thought.'):        
+                $nature_13 += 4;
+                ~SumToLocal( $nature_13); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('What?! Why?!'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 57:        
+        if ($SCENARIO_TALK_BIT_FLAG[57]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[57] = 1;        
+        message_Monologue("You fail miserably! Everyone found out, and\nthey\'re disappointed in you... What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Try and hide.'):        
+                $nature_6 += 2;
+                ~SumToLocal( $nature_6); 
+                
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Think of an excuse.'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_8 += 2;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Drop down and play dead!'):        
+                $nature_14 += 4;
+                ~SumToLocal($nature_14);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 58:        
+        if ($SCENARIO_TALK_BIT_FLAG[58]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[58] = 1;        
+        message_Monologue("You want to reveal that you like someone a\nwhole bunch! What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Show it by playing together.'):        
+                $nature_3 += 4;
+                ~SumToLocal($nature_3);
+                $nature_13 += 2;
+                ~SumToLocal($nature_13);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Make it obvious by… playing a prank!'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_5 += 2;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('State it clearly for all to hear!'):        
+                $nature_2 += 2;
+                ~SumToLocal($nature_2);
+                $nature_4 += 2;
+                ~SumToLocal($nature_4);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Keep it to myself! It\'s too risky!'):        
+                $nature_6 += 2;
+                ~SumToLocal($nature_6);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 59:        
+        if ($SCENARIO_TALK_BIT_FLAG[59]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[59] = 1;        
+        message_Monologue("The people at the next table are singing for\nsomeone\'s birthday. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Stay on the sidelines.'):        
+                $nature_9 += 2;
+                ~SumToLocal($nature_9);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Sing along!'):        
+                $nature_3 += 4;
+                ~SumToLocal($nature_3);
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Walk away.'):        
+                $nature_8 += 4;
+                ~SumToLocal($nature_8);
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 60:        
+        if ($SCENARIO_TALK_BIT_FLAG[60]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[60] = 1;        
+        message_Monologue("You\'re on a stroll when a TV crew pounces\non you for an interview. What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Run away! How embarrassing!'):        
+                $nature_6 += 4;
+                ~SumToLocal($nature_6);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Answer questions properly.'):        
+                $nature_2 += 4;
+                ~SumToLocal($nature_2);
+                $nature_8 += 4;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Yuck it up! Woo-hoo! I\'m on TV!'):        
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_15 += 2;
+                ~SumToLocal($nature_15);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 61:        
+        if ($SCENARIO_TALK_BIT_FLAG[61]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[61] = 1;        
+        message_Monologue("You see a big and comfortable bed.\nYour first reaction is to...");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Jump on it!'):        
+                $nature_7 += 2;
+                ~SumToLocal($nature_7);
+                $nature_8 += 2;
+                ~SumToLocal($nature_8);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Belly flop!'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Curl up.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 62:        
+        if ($SCENARIO_TALK_BIT_FLAG[62]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[62] = 1;        
+        message_Monologue("You\'re daydreaming...when your friend sprays\nyou with water! What do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Get mad.'):        
+                $nature_7 += 4;
+                ~SumToLocal($nature_7);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Get sad.'):        
+                $nature_11 += 4;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Woo-hoo! Water fight!'):        
+                $nature_4 += 4;
+                ~SumToLocal($nature_4);
+                $nature_3 += 4;
+                ~SumToLocal($nature_3);
+                $nature_5 += 4;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+                
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+        case 63:        
+        if ($SCENARIO_TALK_BIT_FLAG[63]) {        
+        // Skip Question, go to question after it!        
+        } else {        
+        $SCENARIO_TALK_BIT_FLAG[63] = 1;        
+        message_Monologue("You\'ve been handed a large bag as a souvenir.\nWhat do you do?");        
+        switch(message_SwitchMenu(0,0)) {        
+        case menu('Wait until I get home to open it.'):        
+                $nature_1 += 2;
+                ~SumToLocal($nature_1);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Shake it!'):        
+                $nature_5 += 2;
+                ~SumToLocal($nature_5);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('Open it!'):        
+                $nature_14 += 2;
+                ~SumToLocal($nature_14);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+        case menu('It\'s smaller than everyone else\'s'):        
+                $nature_11 += 2;
+                ~SumToLocal($nature_11);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                $nature_0 += 0;
+                ~SumToLocal($nature_0);
+                break;
+            }    
+            $LOCAL1 += 1;    
+            message_Close();    
+            break;    
+        }        
+    /* Insert more Questions Here */            
+    jump @Top_Of_Questions;            
+    }            
+    $LOCAL1 += 1;            
+    }            
+}                

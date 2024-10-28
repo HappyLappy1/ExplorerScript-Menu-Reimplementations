@@ -1,0 +1,422 @@
+/*  
+    QuizMenuTool QMT002 (By Happylappy)
+    This script handles the aura bow segment of the quiz, playing out the cinematic, choosing a bow color, and displaying it.
+    The following SPs are present:
+        SP 78: CheckTSPress
+        SP 79: ReturnTSPFrames
+        SP 80: MoveText2TopScreen
+        SP 81: getconfigcolor
+    Decide how you want bow color to work in the macro at the bottom, and be sure to read all of my comments at each TODO!
+    
+*/
+
+def 0 {
+    debug_Print("QMT002 Initiated!");
+    $LOCAL1 = value($SCENARIO_SUB2);
+    screen_FadeOutAll(1, 30);
+    back_SetGround(LEVEL_S17P01A);
+    §label_top_aura;
+    ProcessSpecial(80,0,1);
+    message_Close();
+    message_Monologue('[CN]Before you begin your adventure,\n[CN]your [CS:E]aura[CR] must be analyzed.');
+    message_Monologue('[CN]Your [CS:E]aura[CR] is the energy that you radiate!');
+    message_Monologue('[CN]Are you ready?');
+    message_Close();
+    supervision_Acting(1);
+    with (object OBJECT_S17P01A1_452) {
+         camera_Move2Myself(100);
+    }
+    screen_FadeIn(0, 0);
+    screen_FadeInAll(1, 30);
+    Wait(10);
+    message_Monologue('Relax. Calm yourself...[K] And now press your\nfingertip gently on the Bow.');
+    jump @not_held_yet;
+    §let_go;
+    message_CloseEnforce();
+    screen_FadeOutAll(1, 30);
+    se_Stop(8712);
+    with( object OBJECT_S17P01A1_452) {
+          Destroy();
+    }
+    supervision_Acting(1);
+    with (object OBJECT_S17P01A1_452) {
+         camera_Move2Myself(100);
+    }
+    back_SetEffect(19, 0);
+    message_Monologue('Don\'t move your finger quite yet.');
+    message_Close();
+    screen_FadeIn(0, 0);
+    screen_FadeInAll(1, 30);
+    §not_held_yet;
+    switch (ProcessSpecial(78, 0, 0)){
+        case 0:
+          jump @not_held_yet;
+        default:
+          break;
+    }
+    message_CloseEnforce();
+    se_Play(8712);
+    back_SetEffect(18, 30);
+    with( object OBJECT_S17P01A1_452) {
+          SetAnimation(2);
+    }
+    message_SetWaitMode(1,-1);
+    message_Monologue('That\'s right...[W:45]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0xB: // 5 Frames of error. If the text speed is correct
+            message_SetWaitMode(-1,-1);
+            jump @let_go;
+        default:
+            break;
+    }
+    message_Monologue('[STS]That\'s right...[STE] Relax your muscles...[W:45]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0x1C: // 5 Frames of error. If the text speed is correct
+            message_SetWaitMode(-1,-1);
+            jump @let_go;
+        default:
+            break;
+    }
+    message_Monologue('[STS]That\'s right... Relax your muscles...[STE] Now stay\nperfectly still...[W:60]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0x43: // 5 Frames of error. If the text speed is correct
+            message_SetWaitMode(-1,-1);
+            jump @let_go;
+        default:
+            break;
+    }
+    message_Monologue('[STS]That\'s right... Relax your muscles... Now stay\nperfectly still...[STE] Now take a deep breath [CS:H]in[CR]...[W:90]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0x92: // 5 Frames of error. If the text speed is correct
+          message_SetWaitMode(-1,-1);
+          jump @let_go;
+        default:
+            break;
+    }
+    message_Monologue('[STS]That\'s right... Relax your muscles... Now stay\nperfectly still... Now take a deep breath [CS:H]in[CR]...[STE]\nand [CS:Z]out[CR]...[W:90]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0xD0: // 5 Frames of error. If the text speed is correct
+          message_SetWaitMode(-1,-1);
+          jump @let_go;
+        default:
+            break;
+    }
+    /*
+    message_Monologue('[STS]That\'s right... Relax your muscles... Now stay\nperfectly still... Now take a deep breath [CS:H]in[CR]...\nand [CS:Z]out[CR]...[STE] One more time...[W:30]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0xCD: // 5 Frames of error. If the text speed is correct
+          message_SetWaitMode(-1,-1);
+          jump @let_go;
+        default:
+            break;
+    }
+    message_Monologue('[STS]That\'s right... Relax your muscles... Now stay\nperfectly still... Now take a deep breath [CS:H]in[CR]...\nand [CS:Z]out[CR]... One more time...[STE] [CS:H]In[CR]...[W:90]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0x105: // 5 Frames of error. If the text speed is correct
+          message_SetWaitMode(-1,-1);
+          jump @let_go;
+        default:
+          break;
+    }
+    message_Monologue('[STS]That\'s right... Relax your muscles... Now stay\nperfectly still... Now take a deep breath [CS:H]in[CR]...\nand [CS:Z]out[CR]... One more time... [CS:H]In[CR]...[STE] And [CS:Z]out[CR]...[W:120]');
+    switch (ProcessSpecial(79, 0, 0)){
+        case < 0x160: // 5 Frames of error. If the text speed is correct
+          message_SetWaitMode(-1,-1);
+          jump @let_go;
+        default:
+          break;
+    }
+    */
+    message_CloseEnforce();
+    se_FadeOut(8712, 30);
+    screen2_WhiteOut(0, 30);
+    screen_WhiteOutAll(1, 30);
+    back_SetEffect(19, 0);
+    back2_SetGround(LEVEL_S04P01A);
+    back_SetGround(LEVEL_S04P01A);
+    screen2_FadeIn(0, 30);
+    screen_FadeIn(0, 0);  
+    screen_FadeInAll(0, 30);
+    message_SetWaitMode(-1,-1);
+    message_Monologue('Your [CS:E]aura[CR] has now been identified.[W:45]\nLift your finger from the Touch Screen.[W:60]');
+    §still_holding;
+    switch (ProcessSpecial(78, 0, 0)){
+        case 0:
+            break;
+        default:
+            jump @still_holding;
+    }
+    Wait(60);
+    message_CloseEnforce();
+    message_Monologue('Your [CS:E]aura[CR] is...');
+    message_Close();
+    ~AssignBowColor($CONFIG_COLOR_KIND);
+    switch($CONFIG_COLOR_KIND) {
+        case 0:
+            screen_FadeOutAll(1,0);
+            back_SetGround(LEVEL_S17P02A);
+            supervision_Acting(2);
+            screen_FadeIn(0,0);
+            screen_FadeInAll(1,30);
+            Wait(10);
+            se_Play(11266);
+            supervision_Acting(18);
+            Wait(30);
+            message_Monologue('[R][CN]a stately silver![W:120]');
+            break;
+        case 1:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(3);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a subdued brown![W:120]');
+             break;
+        case 2:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(4);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a fiery red![W:120]');
+             break;
+        case 3:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(5);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]an uplifting pink![W:120]');
+             break;
+        case 4:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(6);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a stunning orange![W:120]');
+             break;
+        case 5:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(7);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]an energetic yellow![W:120]');
+             break;
+        case 6:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(8);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a brilliant green![W:120]');
+             break;
+        case 7:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(9);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a refreshing green![W:120]');
+             break;
+        case 8:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(10);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a deep green![W:120]');
+             break;
+        case 9:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(11);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a gentle mint green![W:120]');
+             break;
+        case 10:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(12);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a clear aqua blue![W:120]');
+             break;
+        case 11:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(13);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a cool sky blue![W:120]');
+             break;
+        case 12:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(14);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a smart marine blue![W:120]');
+             break;
+        case 13:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(15);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a mystic purple![W:120]');
+             break;
+        case 14:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(16);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]an elegant violet![W:120]');
+             break;
+        case 15:
+             screen_FadeOutAll(1,0);
+             back_SetGround(LEVEL_S17P02A);
+             supervision_Acting(17);
+             screen_FadeIn(0,0);
+             screen_FadeInAll(1,30);
+             Wait(10);
+             se_Play(11266);
+             supervision_Acting(18);
+             Wait(30);
+             message_Monologue('[R][CN]a vivid pink![W:120]');
+             break;
+    }
+    Wait(150);
+    message_CloseEnforce();
+    screen2_FadeOut(0, 30);
+    screen_FadeOutAll(1, 30);
+    back_SetGround(LEVEL_S02P01A);
+    back2_SetGround(LEVEL_S02P01A);
+    screen2_FadeIn(0, 30);
+    screen_FadeIn(0, 0);
+    screen_FadeInAll(1, 30);
+    Wait(10);
+    ProcessSpecial(80,0,0);
+    $SCENARIO_SUB2 = value($LOCAL1);
+    end;
+}
+ 
+ /* 
+    Right now, this SP takes the bow color from the DS favorite color.
+    You could instead randomize it, set it manually, etc.
+    $CONFIG_COLOR_KIND is where this gets stored long-term!
+ */
+ macro AssignBowColor($bowcolor) {
+    ProcessSpecial(84,0,0);
+    /*
+    switch(random(16)) { // Randomly Assign Bow Color. Why not lol!
+        case 0:
+            $CONFIG_COLOR_KIND = 0;
+             break;
+        case 1:
+            $CONFIG_COLOR_KIND = 1;
+             break; 
+        case 2:
+            $CONFIG_COLOR_KIND = 2;
+             break; 
+        case 3:
+            $CONFIG_COLOR_KIND = 3;
+             break; 
+        case 4:
+            $CONFIG_COLOR_KIND = 4;
+             break; 
+        case 5:
+            $CONFIG_COLOR_KIND = 5;
+             break; 
+        case 6:
+            $CONFIG_COLOR_KIND = 6;
+             break; 
+        case 7:
+            $CONFIG_COLOR_KIND = 7;
+             break; 
+        case 8:
+            $CONFIG_COLOR_KIND = 8;
+             break; 
+        case 9:
+            $CONFIG_COLOR_KIND = 9;
+             break; 
+        case 10:
+            $CONFIG_COLOR_KIND = 10;
+             break;  
+        case 11:
+            $CONFIG_COLOR_KIND = 11;
+             break;  
+        case 12:
+            $CONFIG_COLOR_KIND = 12;
+             break;  
+        case 13:
+            $CONFIG_COLOR_KIND = 13;
+             break;  
+        case 14:
+            $CONFIG_COLOR_KIND = 14;
+             break;  
+        case 15:
+            $CONFIG_COLOR_KIND = 15;
+             break;  
+    }
+    */
+ }

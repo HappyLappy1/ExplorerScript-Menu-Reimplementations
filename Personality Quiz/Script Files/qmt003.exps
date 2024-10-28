@@ -1,0 +1,1252 @@
+/* 
+    QuizMenuTool QMT003 (By Happylappy)
+    This script handles the nature reveal, hero selection, and partner selection.
+    The following SPs are present:
+        SP 82: StarterSetterVar
+        SP 83: set_frame_color (Note: this is temporary to the current script! INIT_TEAM_AFTER_QUIZ handles the long-term color!)
+        SP 84: SetDemoCharactersToTeam_Var
+    Add your nature blurbs, starters, and the conditions necessary for them to be selected!
+    Also follow any TODO's you see, those are important!
+    Also, if this script refuses to boot up, that might mean you have too many starters to display at once.
+    Not a *huge* deal, but something that would need to be scripted around with multiple acting scenes...
+*/
+def 0 {
+    debug_Print("QMT003 Initiated!");
+    $LOCAL1 = value($SCENARIO_SUB2);
+    message_Monologue('Thank you for answering all those questions.');
+    ~DisplayNatureText($LOCAL1);
+    message_Close();
+    ~SelectStarter($LOCAL1);
+    ProcessSpecial(84,$DUNGEON_EVENT_LOCAL,0);
+    Wait(15);
+    message_SetFaceEmpty(ACTOR_NPC_DEMO_HERO,FACE_HAPPY,FACE_POS_BOTTOM_C_FACER);
+    if ($EVENT_LOCAL == 2) {
+        message_Monologue('[R][CN]Will be an [c_kind:NPC_DEMO_HERO]![W:60]');
+    } else {
+        message_Monologue('[R][CN]Will be a [c_kind:NPC_DEMO_HERO]![W:60]');
+    }
+    message_Close();
+    §confirm_hero;
+    ProcessSpecial(84,$DUNGEON_EVENT_LOCAL,0);
+    Wait(15);
+    message_SetFaceEmpty(ACTOR_NPC_DEMO_HERO,FACE_HAPPY,FACE_POS_BOTTOM_C_FACER);
+    message_Monologue('Is [c_kind:NPC_DEMO_HERO] who you want?');
+    switch(message_SwitchMenu(0, 1)) {
+        case menu('Yes'):
+            message_Close();
+            message_EmptyActor();
+            ProcessSpecial(82,$DUNGEON_EVENT_LOCAL,0);
+            if ($RECYCLE_COUNT == 1) {
+               ProcessSpecial(83,1,0); // Set textbox to female species color
+            } else {
+               ProcessSpecial(83,0,0); // Set textbox to male/genderless species color
+            }
+            break;
+        case menu('No'):
+            message_EmptyActor();
+            message_Close();
+            call @enable_all_starters;
+            call @set_valid_heroes;
+            message_Monologue('Who would you like to be?');
+            call @choose_starter;
+            $HERO_TALK_KIND = value($EVENT_LOCAL);
+            jump @confirm_hero;
+    }
+    message_Monologue('And finally...[K]\nWho will be your partner?');
+    jump @choose_partner;
+    §confirm_partner;
+    ProcessSpecial(84,$DUNGEON_EVENT_LOCAL,1);
+    Wait(15);
+    message_SetFaceEmpty(ACTOR_NPC_DEMO_PARTNER,FACE_HAPPY,FACE_POS_BOTTOM_C_FACER);
+    message_Monologue('Is [c_kind:NPC_DEMO_PARTNER] who you want?');
+    switch(message_SwitchMenu(0, 1)) {
+        case menu('Yes'):
+            message_Close();
+            message_EmptyActor();
+            ProcessSpecial(82,$DUNGEON_EVENT_LOCAL,1);
+            
+            ProcessSpecial(83,0,0);
+            break;
+        case menu('No'):
+            §choose_partner;
+            message_EmptyActor();
+            message_Close();
+            call @enable_all_starters;
+            call @set_valid_partners;
+            message_Monologue('Choose the Pokèmon you want for a partner.');
+            call @choose_starter;
+            $PARTNER_TALK_KIND = value($EVENT_LOCAL);
+            jump @confirm_partner;
+    }
+    // TODO: If you want to save any information about the quiz, this is your chance to do so, before it all gets deleted!
+    clear $SCENARIO_MAIN_BIT_FLAG;
+    clear $SCENARIO_SIDE;
+    clear $SCENARIO_MAIN;
+    $VERSION = 1;
+    $CRYSTAL_COLOR_01 = 0;
+    $CRYSTAL_COLOR_02 = 0;
+    $CRYSTAL_COLOR_03 = 0;
+    $COMPULSORY_SAVE_POINT = 0;
+    $COMPULSORY_SAVE_POINT_SIDE = 0;
+    $SCENARIO_SELECT_BACKUP = 0;
+    $GROUND_ENTER = 0;
+    $GROUND_ENTER_LINK = 0;
+    $GROUND_GETOUT = 0;
+    $GROUND_MAP = 0;
+    $GROUND_PLACE = 0;
+    $GROUND_ENTER_BACKUP = 0;
+    $GROUND_ENTER_LINK_BACKUP = 0;
+    $GROUND_GETOUT_BACKUP = 0;
+    $GROUND_MAP_BACKUP = 0;
+    $GROUND_PLACE_BACKUP = 0;
+    $DUNGEON_SELECT = 0;
+    $DUNGEON_ENTER = 0;
+    $DUNGEON_ENTER_MODE = 0;
+    $DUNGEON_ENTER_INDEX = 0;
+    $DUNGEON_RESULT = 0;
+    $GROUND_START_MODE = 0;
+    $DUNGEON_ENTER_BACKUP = 0;
+    $DUNGEON_ENTER_MODE_BACKUP = 0;
+    $DUNGEON_ENTER_INDEX_BACKUP = 0;
+    $DUNGEON_RESULT_BACKUP = 0;
+    $GROUND_START_MODE_BACKUP = 0;
+    $REQUEST_CLEAR_COUNT = 0;
+    $PLAYER_KIND = 0;
+    $ATTENDANT1_KIND = 0;
+    $ATTENDANT2_KIND = 0;
+    $PLAYER_KIND_BACKUP = 0;
+    $ATTENDANT1_KIND_BACKUP = 0;
+    $ATTENDANT2_KIND_BACKUP = 0;
+    $HERO_FIRST_KIND = 0;
+    $PARTNER_FIRST_KIND = 0;
+    $RANDOM_REQUEST_NPC03_KIND = 0;
+    $WORLD_MAP_LEVEL = 0;
+    $EVENT_LOCAL = 0;
+    $DUNGEON_EVENT_LOCAL = 0;
+    $LOTTERY_RESULT = 0;
+    $ITEM_BACKUP = 0;
+    $ITEM_BACKUP_KUREKURE = 0;
+    $ITEM_BACKUP_TAKE = 0;
+    $ITEM_BACKUP_GET = 0;
+    $REQUEST_THANKS_RESULT_KIND = 0;
+    $REQUEST_THANKS_RESULT_VARIATION = 0;
+    $SUB30_SPOT_LEVEL = 0;
+    $TEAM_RANK_EVENT_LEVEL = 0;
+    $PLAY_OLD_GAME = 0;
+    clear $SCENARIO_SUB1; // These should be cleared eventually!
+    clear $SCENARIO_SUB2;
+    clear $SCENARIO_SUB3;
+    clear $SCENARIO_SUB4;
+    clear $SCENARIO_SUB5;
+    clear $SCENARIO_SUB6;
+    clear $SCENARIO_SUB7;
+    clear $SCENARIO_SUB8;
+    if ($BIT_FUWARANTE_LOCAL[1]) {
+        $PLAY_OLD_GAME = 1;
+    } else {
+        $PLAY_OLD_GAME = 0;
+    }
+    clear $BIT_FUWARANTE_LOCAL; // Clean up the bitflags, the game uses this for Driftblim later
+    $SCENARIO_SUB1 = value($CONFIG_COLOR_KIND); // Use SUB1 as a mule to retain $CONFIG_COLOR_KIND through Init_Main_Team_After_Quiz
+    debug_Print("Hi");
+    switch ( ProcessSpecial(PROCESS_SPECIAL_INIT_MAIN_TEAM_AFTER_QUIZ, 0, 0) ) { }
+    switch ( message_Menu(MENU_PARTNER_NAME) ) { }
+    $CONFIG_COLOR_KIND = value($SCENARIO_SUB1);
+    clear $SCENARIO_SUB1;
+    message_Monologue('OK! That\'s it! You\'re all ready to go!');
+    message_Monologue('You\'re off to the world of Pokèmon!');
+    message_Monologue('Be strong! Stay smart! And be victorious!');
+    message_Close();
+    // message_Monologue('[CS:B][STS]Play GoHL[STE][CR][W:5]');
+    message_CloseEnforce();
+    bgm_FadeOut(60);
+    screen_FadeOutAll(0, 60);
+    screen2_FadeOut(1, 60);
+    screen_FadeOut(1,0);
+    screen_FadeInAll(1,0);
+    end;
+    
+    //TODO: set this up to contain all options for the hero/partner!
+    §choose_starter;
+    debug_Print("Choose_Starter");
+    switch(message_SwitchMenu2(0,1,$SCENARIO_TALK_BIT_FLAG)) {
+        case menu('♂ Bulbasaur'):
+            $DUNGEON_EVENT_LOCAL = 1;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Bulbasaur'):
+            $DUNGEON_EVENT_LOCAL = 601;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Charmander'):
+            $DUNGEON_EVENT_LOCAL = 4;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Charmander'):
+            $DUNGEON_EVENT_LOCAL = 604;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Chikorita'):
+            $DUNGEON_EVENT_LOCAL = 152;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Chikorita'):
+            $DUNGEON_EVENT_LOCAL = 752;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Chimchar'):
+            $DUNGEON_EVENT_LOCAL = 425;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Chimchar'):
+            $DUNGEON_EVENT_LOCAL = 1025;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Cyndaquil'):
+            $DUNGEON_EVENT_LOCAL = 155;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Cyndaquil'):
+            $DUNGEON_EVENT_LOCAL = 755;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♀ Eevee'):
+            $DUNGEON_EVENT_LOCAL = 733;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Mudkip'):
+            $DUNGEON_EVENT_LOCAL = 286;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Mudkip'):
+            $DUNGEON_EVENT_LOCAL = 886;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Phanpy'):
+            $DUNGEON_EVENT_LOCAL = 258;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♂ Pikachu'):
+            $DUNGEON_EVENT_LOCAL = 25;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Pikachu'):
+            $DUNGEON_EVENT_LOCAL = 625;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Piplup'):
+            $DUNGEON_EVENT_LOCAL = 428;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Piplup'):
+            $DUNGEON_EVENT_LOCAL = 1028;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Riolu'):
+            $DUNGEON_EVENT_LOCAL = 489;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♂ Shinx'):
+            $DUNGEON_EVENT_LOCAL = 438;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Skitty'):
+            $DUNGEON_EVENT_LOCAL = 928;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Squirtle'):
+            $DUNGEON_EVENT_LOCAL = 7;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Squirtle'):
+            $DUNGEON_EVENT_LOCAL = 607;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Torchic'):
+            $DUNGEON_EVENT_LOCAL = 283;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Torchic'):
+            $DUNGEON_EVENT_LOCAL = 883;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Totodile'):
+            $DUNGEON_EVENT_LOCAL = 158;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Totodile'):
+            $DUNGEON_EVENT_LOCAL = 758;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Treecko'):
+            $DUNGEON_EVENT_LOCAL = 280;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Treecko'):
+            $DUNGEON_EVENT_LOCAL = 880;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Turtwig'):
+            $DUNGEON_EVENT_LOCAL = 422;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♀ Turtwig'):
+            $DUNGEON_EVENT_LOCAL = 1022;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♀ Vulpix'):
+            $DUNGEON_EVENT_LOCAL = 637;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('♂ Lapras'):
+            $DUNGEON_EVENT_LOCAL = 131;
+            $EVENT_LOCAL = 5;
+            message_Close();
+            break;
+        case menu('Magnemite'):
+            $DUNGEON_EVENT_LOCAL = 81;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♂ Meowth'):
+            $DUNGEON_EVENT_LOCAL = 52;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+        case menu('♂ Munchlax'):
+            $DUNGEON_EVENT_LOCAL = 488;
+            $EVENT_LOCAL = 4;
+            message_Close();
+            break;
+    }
+    return;    
+    // TODO: Manually encode which starters should be excluded for each case:
+    §set_valid_heroes;
+    debug_Print("set_valid_heroes");
+    $SCENARIO_TALK_BIT_FLAG[34] = 0;
+    $SCENARIO_TALK_BIT_FLAG[35] = 0;
+    if($BIT_FUWARANTE_LOCAL[4]) { // Player chose the Male option! Prevent these starters!
+        debug_Print("Player Male!");
+        $SCENARIO_TALK_BIT_FLAG[1] = 0; // Bulbasaur
+        $SCENARIO_TALK_BIT_FLAG[3] = 0; // Charmander
+        $SCENARIO_TALK_BIT_FLAG[5] = 0; // Chikorita
+        $SCENARIO_TALK_BIT_FLAG[7] = 0; // Chimchar
+        $SCENARIO_TALK_BIT_FLAG[9] = 0; // Cyndaquil
+        $SCENARIO_TALK_BIT_FLAG[10] = 0; // Eevee
+        $SCENARIO_TALK_BIT_FLAG[12] = 0; // Mudkip
+        $SCENARIO_TALK_BIT_FLAG[15] = 0; // Pikachu
+        $SCENARIO_TALK_BIT_FLAG[17] = 0; // Piplup
+        $SCENARIO_TALK_BIT_FLAG[20] = 0; // Skitty
+        $SCENARIO_TALK_BIT_FLAG[22] = 0; // Squirtle
+        $SCENARIO_TALK_BIT_FLAG[24] = 0; // Torchic
+        $SCENARIO_TALK_BIT_FLAG[26] = 0; // Totodile
+        $SCENARIO_TALK_BIT_FLAG[28] = 0; // Treecko
+        $SCENARIO_TALK_BIT_FLAG[30] = 0; // Turtwig
+        $SCENARIO_TALK_BIT_FLAG[31] = 0; // Vulpix
+    }
+    if($BIT_FUWARANTE_LOCAL[3]) { // Player chose the Female option! Prevent these starters!
+        debug_Print("Player Female!");
+        $SCENARIO_TALK_BIT_FLAG[0] = 0; // Bulbasaur
+        $SCENARIO_TALK_BIT_FLAG[2] = 0; // Charmander
+        $SCENARIO_TALK_BIT_FLAG[4] = 0; // Chikorita
+        $SCENARIO_TALK_BIT_FLAG[6] = 0; // Chimchar
+        $SCENARIO_TALK_BIT_FLAG[8] = 0; // Cyndaquil
+        $SCENARIO_TALK_BIT_FLAG[11] = 0; // Mudkip
+        $SCENARIO_TALK_BIT_FLAG[13] = 0; // Phanpy
+        $SCENARIO_TALK_BIT_FLAG[14] = 0; // Pikachu
+        $SCENARIO_TALK_BIT_FLAG[16] = 0; // Piplup
+        $SCENARIO_TALK_BIT_FLAG[18] = 0; // Riolu
+        $SCENARIO_TALK_BIT_FLAG[19] = 0; // Shinx
+        $SCENARIO_TALK_BIT_FLAG[21] = 0; // Squirtle
+        $SCENARIO_TALK_BIT_FLAG[23] = 0; // Torchic
+        $SCENARIO_TALK_BIT_FLAG[25] = 0; // Totodile
+        $SCENARIO_TALK_BIT_FLAG[27] = 0; // Treecko
+        $SCENARIO_TALK_BIT_FLAG[29] = 0; // Turtwig
+        $SCENARIO_TALK_BIT_FLAG[32] = 0; // Lapras
+    }
+    
+    if($BIT_FUWARANTE_LOCAL[2]) { // Arbitrary blacklist condition #2 is met! Prevent these starters!
+        Wait(1); // Condition is currently unused!
+    }
+    
+    if($BIT_FUWARANTE_LOCAL[1]) { // Arbitrary blacklist condition #1 is met! Prevent these starter!
+        Wait(1); // Condition is currently unused!
+    }
+    
+    if($BIT_FUWARANTE_LOCAL[0]) { // Player has played Time/Darkness! Prevent the starter!
+        Wait(1); // Unsure why you'd turn off starters if TD was played, but you could!
+    }
+    // TODO: Add more flags if you have 200+ total starters!
+    return;
+    §set_valid_partners;
+    // The gender of the partner is more restrictive than it is for the hero in base-game!
+    // Female bulbasaur isn't normally allowed, which is why I've disabled it here. 
+    $SCENARIO_TALK_BIT_FLAG[1] = 0; // Bulbasaur
+    $SCENARIO_TALK_BIT_FLAG[3] = 0; // Charmander
+    $SCENARIO_TALK_BIT_FLAG[4] = 0; // Chikorita
+    $SCENARIO_TALK_BIT_FLAG[7] = 0; // Chimchar
+    $SCENARIO_TALK_BIT_FLAG[9] = 0; // Cyndaquil
+    $SCENARIO_TALK_BIT_FLAG[12] = 0; // Mudkip
+    $SCENARIO_TALK_BIT_FLAG[15] = 0; // Pikachu
+    $SCENARIO_TALK_BIT_FLAG[17] = 0; // Piplup
+    $SCENARIO_TALK_BIT_FLAG[23] = 0; // Torchic
+    $SCENARIO_TALK_BIT_FLAG[26] = 0; // Totodile
+    $SCENARIO_TALK_BIT_FLAG[28] = 0; // Treecko
+    $SCENARIO_TALK_BIT_FLAG[30] = 0; // Turtwig
+    return;
+    
+    §enable_all_starters;
+    clear $SCENARIO_TALK_BIT_FLAG;
+    $SCENARIO_TALK_BIT_FLAG[0] = 1;
+    $SCENARIO_TALK_BIT_FLAG[1] = 1;
+    $SCENARIO_TALK_BIT_FLAG[2] = 1;
+    $SCENARIO_TALK_BIT_FLAG[3] = 1;
+    $SCENARIO_TALK_BIT_FLAG[4] = 1;
+    $SCENARIO_TALK_BIT_FLAG[5] = 1;
+    $SCENARIO_TALK_BIT_FLAG[6] = 1;
+    $SCENARIO_TALK_BIT_FLAG[7] = 1;
+    $SCENARIO_TALK_BIT_FLAG[8] = 1;
+    $SCENARIO_TALK_BIT_FLAG[9] = 1;
+    $SCENARIO_TALK_BIT_FLAG[10] = 1;
+    $SCENARIO_TALK_BIT_FLAG[11] = 1;
+    $SCENARIO_TALK_BIT_FLAG[12] = 1;
+    $SCENARIO_TALK_BIT_FLAG[13] = 1;
+    $SCENARIO_TALK_BIT_FLAG[14] = 1;
+    $SCENARIO_TALK_BIT_FLAG[15] = 1;
+    $SCENARIO_TALK_BIT_FLAG[16] = 1;
+    $SCENARIO_TALK_BIT_FLAG[17] = 1;
+    $SCENARIO_TALK_BIT_FLAG[18] = 1;
+    $SCENARIO_TALK_BIT_FLAG[19] = 1;
+    $SCENARIO_TALK_BIT_FLAG[20] = 1;
+    $SCENARIO_TALK_BIT_FLAG[21] = 1;
+    $SCENARIO_TALK_BIT_FLAG[22] = 1;
+    $SCENARIO_TALK_BIT_FLAG[23] = 1;
+    $SCENARIO_TALK_BIT_FLAG[24] = 1;
+    $SCENARIO_TALK_BIT_FLAG[25] = 1;
+    $SCENARIO_TALK_BIT_FLAG[26] = 1;
+    $SCENARIO_TALK_BIT_FLAG[27] = 1;
+    $SCENARIO_TALK_BIT_FLAG[28] = 1;
+    $SCENARIO_TALK_BIT_FLAG[29] = 1;
+    $SCENARIO_TALK_BIT_FLAG[30] = 1;
+    $SCENARIO_TALK_BIT_FLAG[31] = 1;
+    $SCENARIO_TALK_BIT_FLAG[32] = 1;
+    $SCENARIO_TALK_BIT_FLAG[33] = 1;
+    $SCENARIO_TALK_BIT_FLAG[34] = 0;
+    $SCENARIO_TALK_BIT_FLAG[35] = 0;
+    $SCENARIO_TALK_BIT_FLAG[36] = 1;
+    $SCENARIO_TALK_BIT_FLAG[37] = 1;
+    $SCENARIO_TALK_BIT_FLAG[38] = 1;
+    $SCENARIO_TALK_BIT_FLAG[39] = 1;
+    $SCENARIO_TALK_BIT_FLAG[40] = 1;
+    $SCENARIO_TALK_BIT_FLAG[41] = 1;
+    $SCENARIO_TALK_BIT_FLAG[42] = 1;
+    $SCENARIO_TALK_BIT_FLAG[43] = 1;
+    $SCENARIO_TALK_BIT_FLAG[44] = 1;
+    $SCENARIO_TALK_BIT_FLAG[45] = 1;
+    $SCENARIO_TALK_BIT_FLAG[46] = 1;
+    $SCENARIO_TALK_BIT_FLAG[47] = 1;
+    $SCENARIO_TALK_BIT_FLAG[48] = 1;
+    $SCENARIO_TALK_BIT_FLAG[49] = 1;
+    $SCENARIO_TALK_BIT_FLAG[50] = 1;
+    $SCENARIO_TALK_BIT_FLAG[51] = 1;
+    $SCENARIO_TALK_BIT_FLAG[52] = 1;
+    $SCENARIO_TALK_BIT_FLAG[53] = 1;
+    $SCENARIO_TALK_BIT_FLAG[54] = 1;
+    $SCENARIO_TALK_BIT_FLAG[55] = 1;
+    $SCENARIO_TALK_BIT_FLAG[56] = 1;
+    $SCENARIO_TALK_BIT_FLAG[57] = 1;
+    $SCENARIO_TALK_BIT_FLAG[58] = 1;
+    $SCENARIO_TALK_BIT_FLAG[59] = 1;
+    $SCENARIO_TALK_BIT_FLAG[60] = 1;
+    $SCENARIO_TALK_BIT_FLAG[61] = 1;
+    $SCENARIO_TALK_BIT_FLAG[62] = 1;
+    $SCENARIO_TALK_BIT_FLAG[63] = 1;
+    $SCENARIO_TALK_BIT_FLAG[64] = 1;
+    $SCENARIO_TALK_BIT_FLAG[65] = 1;
+    $SCENARIO_TALK_BIT_FLAG[66] = 1;
+    $SCENARIO_TALK_BIT_FLAG[67] = 1;
+    $SCENARIO_TALK_BIT_FLAG[68] = 1;
+    $SCENARIO_TALK_BIT_FLAG[69] = 1;
+    $SCENARIO_TALK_BIT_FLAG[70] = 1;
+    $SCENARIO_TALK_BIT_FLAG[71] = 1;
+    $SCENARIO_TALK_BIT_FLAG[72] = 1;
+    $SCENARIO_TALK_BIT_FLAG[73] = 1;
+    $SCENARIO_TALK_BIT_FLAG[74] = 1;
+    $SCENARIO_TALK_BIT_FLAG[75] = 1;
+    $SCENARIO_TALK_BIT_FLAG[76] = 1;
+    $SCENARIO_TALK_BIT_FLAG[77] = 1;
+    $SCENARIO_TALK_BIT_FLAG[78] = 1;
+    $SCENARIO_TALK_BIT_FLAG[79] = 1;
+    $SCENARIO_TALK_BIT_FLAG[80] = 1;
+    $SCENARIO_TALK_BIT_FLAG[81] = 1;
+    $SCENARIO_TALK_BIT_FLAG[82] = 1;
+    $SCENARIO_TALK_BIT_FLAG[83] = 1;
+    $SCENARIO_TALK_BIT_FLAG[84] = 1;
+    $SCENARIO_TALK_BIT_FLAG[85] = 1;
+    $SCENARIO_TALK_BIT_FLAG[86] = 1;
+    $SCENARIO_TALK_BIT_FLAG[87] = 1;
+    $SCENARIO_TALK_BIT_FLAG[88] = 1;
+    $SCENARIO_TALK_BIT_FLAG[89] = 1;
+    $SCENARIO_TALK_BIT_FLAG[90] = 1;
+    $SCENARIO_TALK_BIT_FLAG[91] = 1;
+    $SCENARIO_TALK_BIT_FLAG[92] = 1;
+    $SCENARIO_TALK_BIT_FLAG[93] = 1;
+    $SCENARIO_TALK_BIT_FLAG[94] = 1;
+    $SCENARIO_TALK_BIT_FLAG[95] = 1;
+    $SCENARIO_TALK_BIT_FLAG[96] = 1;
+    $SCENARIO_TALK_BIT_FLAG[97] = 1;
+    $SCENARIO_TALK_BIT_FLAG[98] = 1;
+    $SCENARIO_TALK_BIT_FLAG[99] = 1;
+    $SCENARIO_TALK_BIT_FLAG[100] = 1;
+    $SCENARIO_TALK_BIT_FLAG[101] = 1;
+    $SCENARIO_TALK_BIT_FLAG[102] = 1;
+    $SCENARIO_TALK_BIT_FLAG[103] = 1;
+    $SCENARIO_TALK_BIT_FLAG[104] = 1;
+    $SCENARIO_TALK_BIT_FLAG[105] = 1;
+    $SCENARIO_TALK_BIT_FLAG[106] = 1;
+    $SCENARIO_TALK_BIT_FLAG[107] = 1;
+    $SCENARIO_TALK_BIT_FLAG[108] = 1;
+    $SCENARIO_TALK_BIT_FLAG[109] = 1;
+    $SCENARIO_TALK_BIT_FLAG[110] = 1;
+    $SCENARIO_TALK_BIT_FLAG[111] = 1;
+    $SCENARIO_TALK_BIT_FLAG[112] = 1;
+    $SCENARIO_TALK_BIT_FLAG[113] = 1;
+    $SCENARIO_TALK_BIT_FLAG[114] = 1;
+    $SCENARIO_TALK_BIT_FLAG[115] = 1;
+    $SCENARIO_TALK_BIT_FLAG[116] = 1;
+    $SCENARIO_TALK_BIT_FLAG[117] = 1;
+    $SCENARIO_TALK_BIT_FLAG[118] = 1;
+    $SCENARIO_TALK_BIT_FLAG[119] = 1;
+    $SCENARIO_TALK_BIT_FLAG[120] = 1;
+    $SCENARIO_TALK_BIT_FLAG[121] = 1;
+    $SCENARIO_TALK_BIT_FLAG[122] = 1;
+    $SCENARIO_TALK_BIT_FLAG[123] = 1;
+    $SCENARIO_TALK_BIT_FLAG[124] = 1;
+    $SCENARIO_TALK_BIT_FLAG[125] = 1;
+    $SCENARIO_TALK_BIT_FLAG[126] = 1;
+    $SCENARIO_TALK_BIT_FLAG[127] = 1;
+    $SCENARIO_TALK_BIT_FLAG[128] = 1;
+    $SCENARIO_TALK_BIT_FLAG[129] = 1;
+    $SCENARIO_TALK_BIT_FLAG[130] = 1;
+    $SCENARIO_TALK_BIT_FLAG[131] = 1;
+    $SCENARIO_TALK_BIT_FLAG[132] = 1;
+    $SCENARIO_TALK_BIT_FLAG[133] = 1;
+    $SCENARIO_TALK_BIT_FLAG[134] = 1;
+    $SCENARIO_TALK_BIT_FLAG[135] = 1;
+    $SCENARIO_TALK_BIT_FLAG[136] = 1;
+    $SCENARIO_TALK_BIT_FLAG[137] = 1;
+    $SCENARIO_TALK_BIT_FLAG[138] = 1;
+    $SCENARIO_TALK_BIT_FLAG[139] = 1;
+    $SCENARIO_TALK_BIT_FLAG[140] = 1;
+    $SCENARIO_TALK_BIT_FLAG[141] = 1;
+    $SCENARIO_TALK_BIT_FLAG[142] = 1;
+    $SCENARIO_TALK_BIT_FLAG[143] = 1;
+    $SCENARIO_TALK_BIT_FLAG[144] = 1;
+    $SCENARIO_TALK_BIT_FLAG[145] = 1;
+    $SCENARIO_TALK_BIT_FLAG[146] = 1;
+    $SCENARIO_TALK_BIT_FLAG[147] = 1;
+    $SCENARIO_TALK_BIT_FLAG[148] = 1;
+    $SCENARIO_TALK_BIT_FLAG[149] = 1;
+    $SCENARIO_TALK_BIT_FLAG[150] = 1;
+    $SCENARIO_TALK_BIT_FLAG[151] = 1;
+    $SCENARIO_TALK_BIT_FLAG[152] = 1;
+    $SCENARIO_TALK_BIT_FLAG[153] = 1;
+    $SCENARIO_TALK_BIT_FLAG[154] = 1;
+    $SCENARIO_TALK_BIT_FLAG[155] = 1;
+    $SCENARIO_TALK_BIT_FLAG[156] = 1;
+    $SCENARIO_TALK_BIT_FLAG[157] = 1;
+    $SCENARIO_TALK_BIT_FLAG[158] = 1;
+    $SCENARIO_TALK_BIT_FLAG[159] = 1;
+    $SCENARIO_TALK_BIT_FLAG[160] = 1;
+    $SCENARIO_TALK_BIT_FLAG[161] = 1;
+    $SCENARIO_TALK_BIT_FLAG[162] = 1;
+    $SCENARIO_TALK_BIT_FLAG[163] = 1;
+    $SCENARIO_TALK_BIT_FLAG[164] = 1;
+    $SCENARIO_TALK_BIT_FLAG[165] = 1;
+    $SCENARIO_TALK_BIT_FLAG[166] = 1;
+    $SCENARIO_TALK_BIT_FLAG[167] = 1;
+    $SCENARIO_TALK_BIT_FLAG[168] = 1;
+    $SCENARIO_TALK_BIT_FLAG[169] = 1;
+    $SCENARIO_TALK_BIT_FLAG[170] = 1;
+    $SCENARIO_TALK_BIT_FLAG[171] = 1;
+    $SCENARIO_TALK_BIT_FLAG[172] = 1;
+    $SCENARIO_TALK_BIT_FLAG[173] = 1;
+    $SCENARIO_TALK_BIT_FLAG[174] = 1;
+    $SCENARIO_TALK_BIT_FLAG[175] = 1;
+    $SCENARIO_TALK_BIT_FLAG[176] = 1;
+    $SCENARIO_TALK_BIT_FLAG[177] = 1;
+    $SCENARIO_TALK_BIT_FLAG[178] = 1;
+    $SCENARIO_TALK_BIT_FLAG[179] = 1;
+    $SCENARIO_TALK_BIT_FLAG[180] = 1;
+    $SCENARIO_TALK_BIT_FLAG[181] = 1;
+    $SCENARIO_TALK_BIT_FLAG[182] = 1;
+    $SCENARIO_TALK_BIT_FLAG[183] = 1;
+    $SCENARIO_TALK_BIT_FLAG[184] = 1;
+    $SCENARIO_TALK_BIT_FLAG[185] = 1;
+    $SCENARIO_TALK_BIT_FLAG[186] = 1;
+    $SCENARIO_TALK_BIT_FLAG[187] = 1;
+    $SCENARIO_TALK_BIT_FLAG[188] = 1;
+    $SCENARIO_TALK_BIT_FLAG[189] = 1;
+    $SCENARIO_TALK_BIT_FLAG[190] = 1;
+    $SCENARIO_TALK_BIT_FLAG[191] = 1;
+    $SCENARIO_TALK_BIT_FLAG[192] = 1;
+    $SCENARIO_TALK_BIT_FLAG[193] = 1;
+    $SCENARIO_TALK_BIT_FLAG[194] = 1;
+    $SCENARIO_TALK_BIT_FLAG[195] = 1;
+    $SCENARIO_TALK_BIT_FLAG[196] = 1;
+    $SCENARIO_TALK_BIT_FLAG[197] = 1;
+    $SCENARIO_TALK_BIT_FLAG[198] = 1;
+    $SCENARIO_TALK_BIT_FLAG[199] = 1;
+    return;
+}
+
+    macro DisplayNatureText($winning_nature_id) {
+        switch($winning_nature_id) {
+	    case 0: // Hardy
+		    message_Monologue("You seem to be...[K]the hardy type! And you're so\ndetermined![P]\nYou don't whine or feel sorry for yourself, and\nyou never need help with anything. You also\nhave a strong sense of responsibility.[P]\nYou work toward your goals steadily and never\nrequire attention along the way.[P]\nYour resilient spirit is the only thing you need\nto guide you toward your goals.[P]\nBut be careful! You risk wearing yourself out\nif you work too long all on your own![P]\nYou should recognize that sometimes you need\nhelp from friends.[P]\nSo, a hardy, determined type like you...");   
+		    break;
+	    case 1: // Docile
+		    message_Monologue("You seem to be...[K]the docile type! You're quite\nsensitive to others![P]\nYou listen attentively and respectfully, and\nyou're quick to pick up on things.[P]\nBecause you're so good at listening, do you find\nthat your friends tell you their problems and\nconcerns often?[P]\nPerhaps people laugh at you sometimes for\nbeing so earnest and not recognizing jokes\nfor what they are.[P]\nBut you're always honestly surprised and\nbashful about this aspect of yourself...[K]\nAnd then honestly laugh about it![P]\nSo, a docile, sensitive type like you...");   
+		    break;
+	    case 2: // Brave
+		    message_Monologue("You seem to be...[K]the brave type![P]\nYou don't know the meaning of fear!\nYou're not afraid to keep moving forward in\nthe face of danger.[P]\nYou also have a strong sense of justice and\ncan't turn a blind eye to someone\nin trouble.[P]\nBut you sometimes push your own personal\nsense of justice a little too hard. Be careful\nthat you don't get too pushy![P]\nSo, a brave type like you...");   
+		    break;
+	    case 3: // Jolly
+		    message_Monologue("You seem to be...[K]the jolly type![P]\nYou have a good sense of humor, and you're\ncompassionate. You're always making others\naround you laugh.[P]\nYou have a sunny, positive outlook, and you\nhave a vitality that raises the lowest of\nspirits to giddy heights![P]\nYet, for all your great cheer, you're also open\nto tears...[P]\nBut you bounce between laughter and tears so\neasily![K] What an adventure life must be like for\nyou, bouncing around like that all day![P]\nSo, a jolly type like you...");   
+		    break;
+	    case 4: // Impish
+		    message_Monologue("You seem to be...[K]the impish type![P]\nYou really like to play a lot! And you enjoy\neating a lot![P]\nYou love competition, but you hate losing.[P]\nYour personality seems crystal clear to others.\nWith you, what you see is what you get!\nYou cheer others with your dazzling smile.[P]\nBut you may be afraid of showing what's in\nyour heart and revealing your true self.[P]\nYou may not want to keep your worries to\nyourself. You're only human, so ask your\nfriends for advice when you need it.[P]\nSo, an impish type like you...");   
+		    break;
+	    case 5: // Naive
+		    message_Monologue("You seem to be...[K]the naive type! You're so open\nand innocent![P]\nWhat a strong sense of curiosity you have!\nAnd you state your opinions purely, sharing\nexactly what you think.[P]\nYou also have an artistic spirit that isn't\nrestrained by social conventions! You startle\npeople with your spontaneity and vision.[P]\nBut when you overdo it, other people can have\na hard time keeping up with you...[P]\nHave you noticed people looking at you oddly?[K]\nAs if for no apparent reason?[P]\nSo, a naive, innocent type like you...");   
+		    break;
+	    case 6: // Timid
+		    message_Monologue("You seem to be...[K]the timid type. You're quite\ngentle![P]\nYou're sometimes a little shy about new things,\naren't you?[P]\nDo you miss out on some experiences because\nyou get worried about the newness of the\nchallenge?[P]\nOf course, there's also a great benefit in being\ncautious, isn't there?[P]\nAfter all, it keeps you nice and safe![K]\nYou live life at your own speed, with no\nhurries and no worries![P]\nSo, a timid and gentle type like you...");   
+		    break;
+	    case 7: // Hasty
+		    message_Monologue("You seem to be...[K]the hasty type![P]\nYou talk quickly! You eat quickly! You walk\nquickly![P]\nPeople often see you as a hard worker because\nyou're always moving around so fast![P]\nBut be careful! If you always rush so fast, you\nmay make mistakes more often than others do.\nAnd what a waste that would be![P]\nRelax every now and then with a nice, deep\nbreath![P]\nSo, a hasty type like you...");   
+		    break;
+	    case 8: // Sassy
+		    message_Monologue("You seem to be...[K]the sassy type! Or at least\nsomewhat sassy![P]\nYou don't like taking orders. You're a little\nrebellious and like to disagree.[P]\nYou're a lone wolf! You like to keep your\ndistance from groups and go off to do things\non your own.[P]\nOlder folks may be the ones who find you the\nmost disagreeable, even selfish.[P]\nBut people younger than you tend to really\nadmire you![P]\nSo, a sassy type like you...");   
+		    break;
+	    case 9: // Calm
+		    message_Monologue("You seem to be...[K]the calm type![P]\nYou're very compassionate and considerate, and\nyou put friends ahead of yourself.[P]\nYou're so generous and kindhearted that you\ncan laugh, forgive, and forget when your\nfriends make mistakes.[P]\nBut be aware that your compassion can\nsometimes get the best of you, putting you too\nfar behind everyone else![P]\nSo, a calm type like you...");   
+		    break;
+	    case 10: // Relaxed
+		    message_Monologue("You seem to be...[K]the relaxed type![P]\nYou're so casual, leisurely, and carefree.[K]\nYou don't rush or stress yourself out, and you\ndon't worry about anything.[P]\nYou like to take a seat and kick up your feet![K]\nOh, yes! You definitely have an easygoing\npersonality, and you don't sweat the details.[P]\nPeople naturally flock to you because they find\nyou to be a free spirit, which is so refreshing![P]\nSo, a relaxed type like you...");   
+		    break;
+	    case 11: // Lonely
+		    message_Monologue("You seem to be...[K]the lonely type, at least\na little bit![P]\nYou might find that surprising, but do you think\nit might be a little true?[P]\nYou know what they say, though...[K] We're all a\nbit lonely every now and then![P]\nYou probably keep this fact of life to yourself,\nthough.[P]\nBut if there's one thing that brings us all\ntogether...[K]it's our need to go it solo![P]\nSo, a lonely and solitary type like you...");   
+		    break;
+	    case 12: // Quirky
+		    message_Monologue("You seem to be...[K]the quirky type![P]\nYou want to be on the cutting edge of fashion!\nYou want to own all the latest stuff, right?[P]\nBut you grow bored of your old things and only\nlike new things![P]\nYou're true to your emotions, and you follow\nyour desires.[P]\nPeople have a hard time keeping up with you\nbecause you change so quickly.[P]\nYou may want to reflect upon how your words\nand actions affect others.[P]\nSo, a quirky type like you...");   
+		    break;
+	    case 13: // Quiet
+		    message_Monologue("You seem to be...[K]the quiet type! And very calm![P]\nYou're great with numbers, and you analyze\ninformation before making decisions.[P]\nYou rarely make mistakes, because you make\ndecisions so calmly and rationally.[P]\nYou also may find it hard to guess what others\nare thinking, and they may find you a touch\ncold at times.[P]\nYou may not want to keep your feelings to\nyourself so much of the time.[P]\nSo, a quiet and calm type like you...");   
+		    break;
+	    case 14: // Rash
+		    message_Monologue("You seem to be...[K]the rash type, just a little bit\nhasty at times![P]\nYou may run out of your house and forget to\nlock the door once in a while.[P]\nAnd you may leave things like umbrellas\nbehind when you leave places.[P]\nMaybe you even dash outside in your slippers\nevery now and then![P]\nPerhaps you even wear your shirts inside out\nall the time![P]\nOh, is that even rasher than you really are?\nSo sorry![P]\nBut know that your friends think your funny\nlittle flubs are adorable![P]\nSo, a rash and hasty type like you...[K]\nOh, wait! One more thing![P]\nYou also sometimes reveal your friends'\nsecrets by accident, don't you![K]\nSorry. It had to be said![P]\nSo, without further ado...[K]a rash and hasty\ntype like you...");   
+		    break;
+	    case 15: // Bold
+		    message_Monologue("You seem to be...[K]the bold type![P]\nYou're so brave, and you never back down\nfrom anything! And you're also gutsy and brash\nin a way that others aren't![P]\nYou're not shy about asking to take home all\nthe leftovers at restaurants, right?[P]\nIf someone's treating you to dinner, you have\nno problem with ordering lots of good stuff![P]\nAnd you aren't fazed by doing things that most\nothers would think twice about doing.[P]\nPerhaps you don't even notice when others are\nupset with you![P]\nYou know, you have the potential to become a\ntruly great person...[K]because you'll be the last\none standing![P]\nSo, a bold type like you...");   
+		    break;
+	    case 16: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 16) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 17: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 17) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 18: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 18) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 19: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 19) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 20: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 20) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 21: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 21) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 22: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 22) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 23: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 23) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 24: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 24) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 25: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 25) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 26: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 26) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 27: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 27) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 28: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 28) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 29: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 29) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 30: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 30) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 31: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 31) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 32: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 32) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 33: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 33) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 34: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 34) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 35: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 35) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 36: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 36) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 37: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 37) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 38: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 38) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 39: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 39) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 40: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 40) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 41: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 41) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 42: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 42) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 43: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 43) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 44: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 44) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 45: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 45) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 46: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 46) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 47: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 47) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 48: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 48) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 49: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 49) type![P]\nSo, a special type like you...");   
+		    break;
+	    case 50: // Quirky
+		    message_Monologue("You seem to be...[K]the (Pool 50) type![P]\nSo, a special type like you...");   
+		    break;
+        }
+    }
+
+
+    // TODO: Put in your starters as you see fit here! If you add a case, be sure you add one to the random() so it can actually be chosen!
+    macro SelectStarter($winning_nature_id) {
+        clear $EVENT_LOCAL;
+        clear $DUNGEON_EVENT_LOCAL;
+        while($EVENT_LOCAL == 0) {
+            $LOCAL0 += 1;
+            debug_Print("Attempting to Select a Starter...");
+            switch($winning_nature_id) {
+                case 0: // Hardy
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,283, 0, 4, 0, 0, 0, 0, 1, 0); // Torchic
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,880, 1, 5, 0, 0, 0, 0, 0, 1); // Treecko
+                            break;
+                    }
+                    break;
+                case 1: // Docile
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,601, 1, 5, 0, 0, 0, 0, 0, 1); // Bulbasaur
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,4, 0, 4, 0, 0, 0, 0, 1, 0); // Charmander
+                            break;
+                    }
+                    break;
+                case 2: // Brave
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,604, 1, 5, 0, 0, 0, 0, 0, 1); // Charmander
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,25, 0, 4, 0, 0, 0, 0, 1, 0); // Pikachu
+                            break;
+                    }
+                    break;
+                case 3: // Jolly
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,733, 1, 5, 1, 0, 0, 0, 0, 1); // Eevee
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,158, 0, 4, 0, 0, 0, 0, 1, 0); // Totodile
+                            break;
+                    }
+                    break;
+                case 4: // Impish
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1025, 1, 5, 0, 0, 0, 0, 0, 1); // Chimchar
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,428, 0, 4, 0, 0, 0, 0, 1, 0); // Piplup
+                            break;
+                    }
+                    break;
+                case 5: // Naive
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,425, 0, 4, 0, 0, 0, 0, 1, 0); // Chimchar
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,928, 1, 5, 0, 0, 0, 0, 0, 1); // Skitty
+                            break;
+                    }
+                    break;
+                case 6: // Timid
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,155, 0, 4, 0, 0, 0, 0, 1, 0); // Cyndaquil
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1022, 1, 5, 0, 0, 0, 0, 0, 1); // Turtwig
+                            break;
+                    }
+                    break;
+                case 7: // Hasty
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,625, 1, 5, 0, 0, 0, 0, 0, 1); // Pikachu
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,438, 0, 4, 0, 0, 0, 0, 1, 0); // Shinx
+                            break;
+                    }
+                    break;
+                case 8: // Sassy
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,489, 0, 4, 0, 0, 0, 0, 1, 0); // Riolu
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,758, 1, 5, 0, 0, 0, 0, 0, 1); // Totodile
+                            break;
+                    }
+                    break;
+                case 9: // Calm
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,755, 1, 5, 0, 0, 0, 0, 0, 1); // Cyndaquil
+                            break;
+                    }
+                    break;
+                case 10: // Relaxed
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,258, 0, 4, 0, 0, 0, 0, 1, 0); // Phanpy
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,637, 1, 5, 0, 0, 0, 0, 0, 1); // Vulpix
+                            break;
+                    }
+                    break;
+                case 11: // Lonely
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,886, 1, 5, 0, 0, 0, 0, 0, 1); // Mudkip
+                            break;
+                    }
+                    break;
+                case 12: // Quirky
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1028, 1, 5, 0, 0, 0, 0, 0, 1); // Piplup
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,7, 0, 4, 0, 0, 0, 0, 1, 0); // Squirtle
+                            break;
+                    }
+                    break;
+                case 13: // Quiet
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,280, 0, 4, 0, 0, 0, 0, 1, 0); // Treecko
+                            break;
+                    }
+                    break;
+                case 14: // Rash
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,883, 1, 5, 0, 0, 0, 0, 0, 1); // Torchic
+                            break;
+                    }
+                    break;
+                case 15: // Bold
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,607, 1, 5, 0, 0, 0, 0, 0, 1); // Squirtle
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,422, 0, 4, 0, 0, 0, 0, 1, 0); // Turtwig
+                            break;
+                    }
+                    break;
+                case 16: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,131, 0, 5, 0, 0, 0, 0, 1, 0); // Lapras
+                            break;
+                    }
+                    break;
+                case 17: // Quirky
+                    switch(random(2)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,81, 2, 4, 0, 0, 0, 0, 0, 0); // Magnemite
+                            break;
+                        case 1:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 18: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 19: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 20: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 21: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 22: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 23: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 24: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 25: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 26: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 27: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 28: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 29: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 30: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 31: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 32: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 33: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 34: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 35: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 36: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 37: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 38: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 39: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 40: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 41: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 42: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 43: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 44: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 45: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 46: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 47: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 48: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 49: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+                case 50: // Quirky
+                    switch(random(1)) {
+                        case 0:
+                            ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+                            break;
+                    }
+                    break;
+            }
+            if ($LOCAL0 > 100) { // If it fails to select a starter over 100 times, set the starter to Bulbasaur!
+                debug_Print("Your starter blacklists eliminated all possible starter options, or a user got catastrophically unlucky...");
+                message_Talk(" Uhh... That can't be right![K]\nApparently you aren\'t anything on the list!\nWhatever, you...");
+                ~AttemptSetStarter($EVENT_LOCAL,$DUNGEON_EVENT_LOCAL,1, 0, 4, 0, 0, 0, 0, 0, 0); // Bulbasaur
+            }
+        }
+    }
+    
+    macro AttemptSetStarter($scratch1,$scratch2,$Species_ID, $GenderID, $Talk_Group, $Start_w_Vowel, 
+                            $Played_TD, 
+                        $FUWARANTE_1, $FUWARANTE_2, $Only_Male, $Only_Female) {
+        $scratch2 = $Species_ID;
+        debug_PrintFlag($scratch2,"Species: ");
+        $scratch1 = $Only_Female;
+        if($scratch1 == 1) { // Is this blacklist on?
+            if($BIT_FUWARANTE_LOCAL[4]) { // Player chose the Male option: NOT female!
+                jump @failed;
+            }
+        }
+        $scratch1 = $Only_Male;
+        if($scratch1 == 1) { // Is this blacklist on?
+            if($BIT_FUWARANTE_LOCAL[3]) { // Player chose the Female option: NOT male!
+                jump @failed;
+            }
+        }
+        $scratch1 = $FUWARANTE_2;
+        if($scratch1 == 1) { // Is this blacklist on?
+            if($BIT_FUWARANTE_LOCAL[2]) { // Arbitrary blacklist condition #2 is met! Prevent the starter!
+                jump @failed;
+            }
+        }
+        $scratch1 = $FUWARANTE_1;
+        if($scratch1 == 1) { // Is this blacklist on?
+            if($BIT_FUWARANTE_LOCAL[1]) { // Arbitrary blacklist condition #1 is met! Prevent the starter!
+                jump @failed;
+            }
+        }
+        $scratch1 = $Played_TD; 
+        if($scratch1 == 1) { // Is this blacklist on?
+            if($BIT_FUWARANTE_LOCAL[0]) { // Player has played Time/Darkness! Prevent the starter!
+                jump @failed;
+            }
+        }
+        $HERO_TALK_KIND = $Talk_Group;
+        $scratch1 = $Start_w_Vowel;
+        $scratch1 += 1; // Is 2 if name begins with a vowel, 1 otherwise!
+        $RECYCLE_COUNT = $GenderID;
+        jump @exit;
+        §failed;
+        debug_Print("Invalid Choice!");
+        $scratch1 = 0; // Failed!
+        $scratch2 = 0;
+        §exit;
+    }
